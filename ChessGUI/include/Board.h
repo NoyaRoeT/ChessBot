@@ -5,9 +5,9 @@
 // Black is differentiated by a +6
 constexpr unsigned int KING = 1;
 constexpr unsigned int QUEEN = 2;
-constexpr unsigned int ROOK = 3;
-constexpr unsigned int BISHOP = 4;
-constexpr unsigned int KNIGHT = 5;
+constexpr unsigned int BISHOP = 3;
+constexpr unsigned int KNIGHT = 4;
+constexpr unsigned int ROOK = 5;
 constexpr unsigned int PAWN = 6;
 
 /*
@@ -25,13 +25,14 @@ public:
 
 private:
 
-	// Rendering related
+	// RENDERING RELATED
+	// Since sprite stores a pointer to texture internally, need to keep texture around.
 	int tileSize;
 	sf::RectangleShape tile;
-	std::vector<sf::Texture> pieceTextures;
+	sf::Texture piecesTexture;
 	std::vector<sf::Sprite> pieceSprites;
-	sf::Color lightSquareCol{255, 255, 255 };
-	sf::Color darkSquareCol{ 0, 0, 0 };
+	sf::Color lightSquareCol{ 234,234,210 };
+	sf::Color darkSquareCol{ 75,114,153 };
 
 
 };

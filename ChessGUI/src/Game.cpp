@@ -2,6 +2,7 @@
 
 Game::Game() : videoMode(600, 600), window(videoMode, "ChessGUI"), board(600)
 {
+    window.setFramerateLimit(60);
 }
 
 void Game::start()
