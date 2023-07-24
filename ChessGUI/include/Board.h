@@ -1,6 +1,7 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include <vector>
+#include <string>
 
 // Black is differentiated by a +6
 constexpr unsigned int KING = 1;
@@ -17,8 +18,10 @@ class Board {
 public:
 	Board(int width);
 
+
 	void update();
 	void render(sf::RenderWindow& gameWindow);
+	void loadFen(const std::string& fen);
 
 	std::vector<int> board;
 
@@ -34,5 +37,6 @@ private:
 	sf::Color lightSquareCol{ 234,234,210 };
 	sf::Color darkSquareCol{ 75,114,153 };
 
+	static const std::string startingFen;
 
 };

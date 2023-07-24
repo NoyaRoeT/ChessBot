@@ -1,4 +1,7 @@
 #include <Board.h>
+#include <sstream>
+
+const std::string Board::startingFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 Board::Board(int width) : board(64, 0), tileSize(width / 8) 
 {
@@ -16,10 +19,9 @@ Board::Board(int width) : board(64, 0), tileSize(width / 8)
 		pieceSprites.push_back(sprite);
 	}
 
-	board[0] = KING + 6;
-	board[7] = BISHOP;
-	board[16] = PAWN + 6;
+    loadFen(Board::startingFen);
 }
+
 
 void Board::update()
 {
@@ -38,6 +40,8 @@ void Board::render(sf::RenderWindow& gameWindow)
 	}
 
 	// Draw pieces
+	// Pieces are drawn from 'top to bottom'.
+	// The piece at index 0 is at the top left of the board.
 	for (int x = 0; x != 8; ++x)
 	for (int y = 0; y != 8; ++y)
 	{
@@ -52,4 +56,63 @@ void Board::render(sf::RenderWindow& gameWindow)
 
 		gameWindow.draw(pieceSprites[spriteIndex]);
 	}
+}
+
+void Board::loadFen(const std::string& fen)
+{
+	// FEN starts with rank 8 -> 1 and a->h
+	// White pieces are uppercase letters
+    std::stringstream fenStream(fen);
+
+    // RESET BOARD
+    for (int& piece : board) piece = 0;
+
+    // READ PIECE PLACEMENT DATA
+    std::string piecePlacementStr;
+    fenStream >> piecePlacementStr;
+
+    int x = 0, y = 0;
+    for (const char& c : piecePlacementStr)
+    {
+
+        if (c == '/')
+        {
+            x = 0;
+            ++y;
+            continue;
+        }
+
+        if (isdigit(c))
+        {
+            const int numEmptySqrs = c - '0';
+            x += numEmptySqrs;
+        }
+        else
+        {
+            int piece = 0;
+            switch (tolower(c)) {
+            case 'k':
+                piece = KING;
+                break;
+            case 'q':
+                piece = QUEEN;
+                break;
+            case 'b':
+                piece = BISHOP;
+                break;
+            case 'n':
+                piece = KNIGHT;
+                break;
+            case 'r':
+                piece = ROOK;
+                break;
+            case 'p':
+                piece = PAWN;
+                break;
+            }
+            int color = (islower(c)) ? 1 : 0;
+            board[x + y * 8] = piece + color * 6;
+            ++x;
+        }
+    }
 }
