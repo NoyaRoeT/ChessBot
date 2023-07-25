@@ -1,4 +1,5 @@
 #pragma once
+#include <SFML/Graphics.hpp>
 #include <vector>
 
 /*
@@ -9,9 +10,13 @@
 class Input {
 
 public:
-	// To update and store all occurences of user input this iteration
-	void update();
 
-	// Not sure what input we need yet so leaving this empty
-	std::vector<int> test;
+	std::vector<sf::Mouse::Button> mouseButtonsPressed;
+	sf::Vector2i mousePos;
+
+	bool isMbPressed(sf::Mouse::Button) const;
+
+	// To update and store all occurences of user input this iteration
+	void update(sf::Event, const sf::RenderWindow&);
+	void clear(); // Reset every iteration
 };

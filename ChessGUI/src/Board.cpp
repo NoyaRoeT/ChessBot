@@ -1,9 +1,12 @@
 #include <Board.h>
+#include <Input.h>
 #include <sstream>
+#include <iostream>
 
 const std::string Board::startingFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-Board::Board(int width) : board(64, 0), tileSize(width / 8) 
+
+Board::Board(const int& width) : selectedPiece(-1), board(64, 0), tileSize(width / 8), lightSquareCol(234, 234, 210), darkSquareCol(75, 114, 153)
 {
 	tile = sf::RectangleShape(sf::Vector2f(tileSize, tileSize));
 	piecesTexture.loadFromFile("assets/chess_pieces_sprites.png");
@@ -23,11 +26,28 @@ Board::Board(int width) : board(64, 0), tileSize(width / 8)
 }
 
 
-void Board::update()
+void Board::update(const Input& input)
 {
+    int mouseTileX = input.mousePos.x / tileSize;
+    int mouseTileY = input.mousePos.y / tileSize;
+   
+    if (selectedPiece == -1 && input.isMbPressed(sf::Mouse::Button::Left) && board[mouseTileX + mouseTileY * 8] != 0)
+    {
+        selectedPiece = mouseTileX + mouseTileY * 8;     
+    }
+    else if (selectedPiece != -1 && input.isMbPressed(sf::Mouse::Button::Left))
+    {
+        int targetPiece = mouseTileX + mouseTileY * 8;
+        if (board[targetPiece] == 0 || getPieceColor(targetPiece) != getPieceColor(selectedPiece))
+        {
+            board[targetPiece] = board[selectedPiece];
+            board[selectedPiece] = 0;
+        }
+        selectedPiece = -1;
+    }
 }
 
-void Board::render(sf::RenderWindow& gameWindow)
+void Board::render(sf::RenderWindow& gameWindow, const Input& input)
 {
 	// Draw board tiles
 	for (int x = 0; x !=8; ++x)
@@ -46,6 +66,9 @@ void Board::render(sf::RenderWindow& gameWindow)
 	for (int y = 0; y != 8; ++y)
 	{
 		const int index = x + y * 8;
+        
+        if (selectedPiece == index) continue;
+
 		const int piece = board[index];
 
 		if (piece == 0) continue;
@@ -56,6 +79,14 @@ void Board::render(sf::RenderWindow& gameWindow)
 
 		gameWindow.draw(pieceSprites[spriteIndex]);
 	}
+
+    // Draw selected piece
+    if (selectedPiece != -1)
+    {
+        const int spriteIndex = board[selectedPiece] - 1;
+        pieceSprites[spriteIndex].setPosition(input.mousePos.x - tileSize / 2, input.mousePos.y - tileSize / 2);
+        gameWindow.draw(pieceSprites[spriteIndex]);
+    }
 }
 
 void Board::loadFen(const std::string& fen)
@@ -115,4 +146,12 @@ void Board::loadFen(const std::string& fen)
             ++x;
         }
     }
+}
+
+int Board::getPieceColor(int index)
+{
+    int targetPiece = board[index];
+    if (targetPiece == 0) return -1;
+    else if (targetPiece < 7) return 0;
+    else return 1;
 }

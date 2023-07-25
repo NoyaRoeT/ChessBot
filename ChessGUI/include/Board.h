@@ -11,22 +11,27 @@ constexpr unsigned int KNIGHT = 4;
 constexpr unsigned int ROOK = 5;
 constexpr unsigned int PAWN = 6;
 
+
+class Input;
 /*
 * Responsible for the chess board
 */
 class Board {
 public:
-	Board(int width);
+	Board(const int& width);
 
 
-	void update();
-	void render(sf::RenderWindow& gameWindow);
+	void update(const Input& input);
+	void render(sf::RenderWindow& gameWindow, const Input& input);
 	void loadFen(const std::string& fen);
+
+	int getPieceColor(int index);
 
 	std::vector<int> board;
 
 
 private:
+	int selectedPiece;
 
 	// RENDERING RELATED
 	// Since sprite stores a pointer to texture internally, need to keep texture around.
@@ -34,8 +39,8 @@ private:
 	sf::RectangleShape tile;
 	sf::Texture piecesTexture;
 	std::vector<sf::Sprite> pieceSprites;
-	sf::Color lightSquareCol{ 234,234,210 };
-	sf::Color darkSquareCol{ 75,114,153 };
+	sf::Color lightSquareCol;
+	sf::Color darkSquareCol;
 
 	static const std::string startingFen;
 
