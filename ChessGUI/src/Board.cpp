@@ -35,9 +35,9 @@ void Board::update(const Input& input)
 void Board::render(sf::RenderWindow& gameWindow, const Input& input)
 {
     drawTiles(gameWindow);
+    drawHighlightedSquares(gameWindow);
     drawPieces(gameWindow);
     drawSelectedPiece(gameWindow, input);
-    drawHighlightedSquares(gameWindow);
 }
 
 
@@ -73,6 +73,7 @@ void Board::drawTiles(sf::RenderWindow& gameWindow)
     for (int x = 0; x != 8; ++x)
     for (int y = 0; y != 8; ++y)
     {
+
         tile.setPosition(x * tileSize, y * tileSize);
         sf::Color tileColor = ((x + y) % 2 == 0) ? lightSquareCol : darkSquareCol;
         tile.setFillColor(tileColor);

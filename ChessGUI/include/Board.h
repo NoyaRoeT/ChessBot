@@ -18,11 +18,28 @@ class Input;
 */
 class Board {
 public:
-	Board(const int& width);
+	std::vector<int> board;
 
+	Board(const int& width);
 
 	void update(const Input& input);
 	void render(sf::RenderWindow& gameWindow, const Input& input);
+	void loadFen(const std::string& fen);
+
+
+
+private:
+	int selectedPiece;
+	std::vector<int> highlightedSquares;
+
+	int tileSize;
+	sf::RectangleShape tile;
+	// Since sprite stores a pointer to texture internally, need to keep texture around.
+	sf::Texture piecesTexture;
+	std::vector<sf::Sprite> pieceSprites;
+	sf::Color lightSquareCol;
+	sf::Color darkSquareCol;
+	sf::Color highlightCol;
 
 	void dragDropPiece(const Input& input);
 
@@ -32,24 +49,6 @@ public:
 	void drawHighlightedSquares(sf::RenderWindow& gameWindow);
 
 	int getPieceColor(int index);
-	void loadFen(const std::string& fen);
-
-	std::vector<int> board;
-
-
-private:
-	int selectedPiece;
-	std::vector<int> highlightedSquares;
-
-	// RENDERING RELATED
-	int tileSize;
-	sf::RectangleShape tile;
-	// Since sprite stores a pointer to texture internally, need to keep texture around.
-	sf::Texture piecesTexture;
-	std::vector<sf::Sprite> pieceSprites;
-	sf::Color lightSquareCol;
-	sf::Color darkSquareCol;
-	sf::Color highlightCol;
 
 	static const std::string startingFen;
 
