@@ -6,7 +6,7 @@
 const std::string Board::startingFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 
-Board::Board(const int& width) : selectedPiece(-1), board(64, 0), tileSize(width / 8), lightSquareCol(234, 234, 210), darkSquareCol(75, 114, 153)
+Board::Board(const int& width) : selectedPiece(-1), board(64, 0), tileSize(width / 8), lightSquareCol(234, 234, 210), darkSquareCol(75, 114, 153), highlightCol(240, 0, 0, 100)
 {
 	tile = sf::RectangleShape(sf::Vector2f(tileSize, tileSize));
 	piecesTexture.loadFromFile("assets/chess_pieces_sprites.png");
@@ -28,6 +28,7 @@ Board::Board(const int& width) : selectedPiece(-1), board(64, 0), tileSize(width
 
 void Board::update(const Input& input)
 {
+
     int mouseTileX = input.mousePos.x / tileSize;
     int mouseTileY = input.mousePos.y / tileSize;
    
@@ -40,8 +41,14 @@ void Board::update(const Input& input)
         int targetPiece = mouseTileX + mouseTileY * 8;
         if (board[targetPiece] == 0 || getPieceColor(targetPiece) != getPieceColor(selectedPiece))
         {
+            
             board[targetPiece] = board[selectedPiece];
             board[selectedPiece] = 0;
+
+            // Every time a move is made, set the highlight squares appropriately
+            highlightedSquares.clear();
+            highlightedSquares.push_back(selectedPiece);
+            highlightedSquares.push_back(targetPiece);
         }
         selectedPiece = -1;
     }
@@ -86,6 +93,19 @@ void Board::render(sf::RenderWindow& gameWindow, const Input& input)
         const int spriteIndex = board[selectedPiece] - 1;
         pieceSprites[spriteIndex].setPosition(input.mousePos.x - tileSize / 2, input.mousePos.y - tileSize / 2);
         gameWindow.draw(pieceSprites[spriteIndex]);
+    }
+
+    // Draw highlighted squares
+    sf::RectangleShape highlight(sf::Vector2f(tileSize, tileSize));
+    highlight.setFillColor(highlightCol);
+
+    for (const int& i : highlightedSquares)
+    {
+        int x = i % 8;
+        int y = i / 8;
+
+        highlight.setPosition(sf::Vector2f(x * tileSize, y * tileSize));
+        gameWindow.draw(highlight);
     }
 }
 

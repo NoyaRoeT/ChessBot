@@ -32,15 +32,17 @@ public:
 
 private:
 	int selectedPiece;
+	std::vector<int> highlightedSquares;
 
 	// RENDERING RELATED
-	// Since sprite stores a pointer to texture internally, need to keep texture around.
 	int tileSize;
 	sf::RectangleShape tile;
+	// Since sprite stores a pointer to texture internally, need to keep texture around.
 	sf::Texture piecesTexture;
 	std::vector<sf::Sprite> pieceSprites;
 	sf::Color lightSquareCol;
 	sf::Color darkSquareCol;
+	sf::Color highlightCol;
 
 	static const std::string startingFen;
 
