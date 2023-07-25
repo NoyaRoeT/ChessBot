@@ -23,9 +23,16 @@ public:
 
 	void update(const Input& input);
 	void render(sf::RenderWindow& gameWindow, const Input& input);
-	void loadFen(const std::string& fen);
+
+	void dragDropPiece(const Input& input);
+
+	void drawTiles(sf::RenderWindow& gameWindow);
+	void drawPieces(sf::RenderWindow& gameWindow);
+	void drawSelectedPiece(sf::RenderWindow& gameWindow, const Input& input);
+	void drawHighlightedSquares(sf::RenderWindow& gameWindow);
 
 	int getPieceColor(int index);
+	void loadFen(const std::string& fen);
 
 	std::vector<int> board;
 

@@ -29,19 +29,33 @@ Board::Board(const int& width) : selectedPiece(-1), board(64, 0), tileSize(width
 void Board::update(const Input& input)
 {
 
+    dragDropPiece(input);
+}
+
+void Board::render(sf::RenderWindow& gameWindow, const Input& input)
+{
+    drawTiles(gameWindow);
+    drawPieces(gameWindow);
+    drawSelectedPiece(gameWindow, input);
+    drawHighlightedSquares(gameWindow);
+}
+
+
+void Board::dragDropPiece(const Input& input)
+{
     int mouseTileX = input.mousePos.x / tileSize;
     int mouseTileY = input.mousePos.y / tileSize;
-   
+
     if (selectedPiece == -1 && input.isMbPressed(sf::Mouse::Button::Left) && board[mouseTileX + mouseTileY * 8] != 0)
     {
-        selectedPiece = mouseTileX + mouseTileY * 8;     
+        selectedPiece = mouseTileX + mouseTileY * 8;
     }
     else if (selectedPiece != -1 && input.isMbPressed(sf::Mouse::Button::Left))
     {
         int targetPiece = mouseTileX + mouseTileY * 8;
         if (board[targetPiece] == 0 || getPieceColor(targetPiece) != getPieceColor(selectedPiece))
         {
-            
+
             board[targetPiece] = board[selectedPiece];
             board[selectedPiece] = 0;
 
@@ -54,48 +68,50 @@ void Board::update(const Input& input)
     }
 }
 
-void Board::render(sf::RenderWindow& gameWindow, const Input& input)
+void Board::drawTiles(sf::RenderWindow& gameWindow)
 {
-	// Draw board tiles
-	for (int x = 0; x !=8; ++x)
-	for (int y = 0; y != 8; ++y)
-	{
-		tile.setPosition(x * tileSize, y * tileSize);
-		sf::Color tileColor = ((x + y) % 2 == 0) ? lightSquareCol : darkSquareCol;
-		tile.setFillColor(tileColor);
-		gameWindow.draw(tile);
-	}
+    for (int x = 0; x != 8; ++x)
+    for (int y = 0; y != 8; ++y)
+    {
+        tile.setPosition(x * tileSize, y * tileSize);
+        sf::Color tileColor = ((x + y) % 2 == 0) ? lightSquareCol : darkSquareCol;
+        tile.setFillColor(tileColor);
+        gameWindow.draw(tile);
+    }
+}
+void Board::drawPieces(sf::RenderWindow& gameWindow)
+{
+    // Pieces are drawn from 'top to bottom'.
+    // The piece at index 0 is at the top left of the board.
+    for (int x = 0; x != 8; ++x)
+    for (int y = 0; y != 8; ++y)
+    {
+        const int index = x + y * 8;
 
-	// Draw pieces
-	// Pieces are drawn from 'top to bottom'.
-	// The piece at index 0 is at the top left of the board.
-	for (int x = 0; x != 8; ++x)
-	for (int y = 0; y != 8; ++y)
-	{
-		const int index = x + y * 8;
-        
         if (selectedPiece == index) continue;
 
-		const int piece = board[index];
+        const int piece = board[index];
 
-		if (piece == 0) continue;
+        if (piece == 0) continue;
 
-		const int spriteIndex = piece - 1;
+        const int spriteIndex = piece - 1;
 
-		pieceSprites[spriteIndex].setPosition(x * tileSize, y * tileSize);
+        pieceSprites[spriteIndex].setPosition(x * tileSize, y * tileSize);
 
-		gameWindow.draw(pieceSprites[spriteIndex]);
-	}
-
-    // Draw selected piece
+        gameWindow.draw(pieceSprites[spriteIndex]);
+    }
+}
+void Board::drawSelectedPiece(sf::RenderWindow& gameWindow, const Input& input)
+{
     if (selectedPiece != -1)
     {
         const int spriteIndex = board[selectedPiece] - 1;
         pieceSprites[spriteIndex].setPosition(input.mousePos.x - tileSize / 2, input.mousePos.y - tileSize / 2);
         gameWindow.draw(pieceSprites[spriteIndex]);
     }
-
-    // Draw highlighted squares
+}
+void Board::drawHighlightedSquares(sf::RenderWindow& gameWindow)
+{
     sf::RectangleShape highlight(sf::Vector2f(tileSize, tileSize));
     highlight.setFillColor(highlightCol);
 
@@ -109,10 +125,18 @@ void Board::render(sf::RenderWindow& gameWindow, const Input& input)
     }
 }
 
+int Board::getPieceColor(int index)
+{
+    int targetPiece = board[index];
+    if (targetPiece == 0) return -1;
+    else if (targetPiece < 7) return 0;
+    else return 1;
+}
+
 void Board::loadFen(const std::string& fen)
 {
-	// FEN starts with rank 8 -> 1 and a->h
-	// White pieces are uppercase letters
+    // FEN starts with rank 8 -> 1 and a->h
+    // White pieces are uppercase letters
     std::stringstream fenStream(fen);
 
     // RESET BOARD
@@ -166,12 +190,4 @@ void Board::loadFen(const std::string& fen)
             ++x;
         }
     }
-}
-
-int Board::getPieceColor(int index)
-{
-    int targetPiece = board[index];
-    if (targetPiece == 0) return -1;
-    else if (targetPiece < 7) return 0;
-    else return 1;
 }
