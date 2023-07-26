@@ -1,6 +1,6 @@
 #include <Game.h>
 
-Game::Game() : videoMode(600, 600), window(videoMode, "ChessGUI"), board(600)
+Game::Game() : videoMode(1050, 600), window(videoMode, "ChessGUI", sf::Style::Titlebar | sf::Style::Close), board(600)
 {
     window.setFramerateLimit(60);
     window.setKeyRepeatEnabled(false);

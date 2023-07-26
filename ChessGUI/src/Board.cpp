@@ -43,6 +43,8 @@ void Board::render(sf::RenderWindow& gameWindow, const Input& input)
 
 void Board::dragDropPiece(const Input& input)
 {
+    if (input.mousePos.x >= tileSize * 8) return;
+
     int mouseTileX = input.mousePos.x / tileSize;
     int mouseTileY = input.mousePos.y / tileSize;
 

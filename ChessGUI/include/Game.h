@@ -31,6 +31,7 @@ public:
 	void render();
 
 private:
+
 	sf::VideoMode videoMode;
 	sf::RenderWindow window;
 	sf::Event event;

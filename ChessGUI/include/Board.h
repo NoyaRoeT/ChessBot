@@ -32,24 +32,28 @@ private:
 	int selectedPiece;
 	std::vector<int> highlightedSquares;
 
+	// Drawing related members
 	int tileSize;
 	sf::RectangleShape tile;
-	// Since sprite stores a pointer to texture internally, need to keep texture around.
-	sf::Texture piecesTexture;
+	sf::Texture piecesTexture; // Since sprite stores a pointer to texture internally, need to keep texture around.
 	std::vector<sf::Sprite> pieceSprites;
 	sf::Color lightSquareCol;
 	sf::Color darkSquareCol;
 	sf::Color highlightCol;
 
+	// Static members
+	static const std::string startingFen;
+
+	// User input
 	void dragDropPiece(const Input& input);
 
+	// Draw functions
 	void drawTiles(sf::RenderWindow& gameWindow);
 	void drawPieces(sf::RenderWindow& gameWindow);
 	void drawSelectedPiece(sf::RenderWindow& gameWindow, const Input& input);
 	void drawHighlightedSquares(sf::RenderWindow& gameWindow);
 
+	// Util functions
 	int getPieceColor(int index);
-
-	static const std::string startingFen;
 
 };
