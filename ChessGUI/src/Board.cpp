@@ -6,7 +6,7 @@
 const std::string Board::startingFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 
-Board::Board(const int& width) : selectedPiece(-1), board(64, 0), tileSize(width / 8), lightSquareCol(234, 234, 210), darkSquareCol(75, 114, 153), highlightCol(240, 0, 0, 100)
+Board::Board(const int& width) : selectedPiece(-1), board(64, 0), tileSize(width / 8), lightSquareCol(234, 234, 210), darkSquareCol(75, 114, 153), mostRecentMoveCol(240, 0, 0, 100), selectedOutlineCol(240, 240, 0)
 {
 	tile = sf::RectangleShape(sf::Vector2f(tileSize, tileSize));
 	piecesTexture.loadFromFile("assets/chess_pieces_sprites.png");
@@ -29,19 +29,19 @@ Board::Board(const int& width) : selectedPiece(-1), board(64, 0), tileSize(width
 void Board::update(const Input& input)
 {
 
-    dragDropPiece(input);
+    movePieceManually(input);
 }
 
 void Board::render(sf::RenderWindow& gameWindow, const Input& input)
 {
     drawTiles(gameWindow);
-    drawHighlightedSquares(gameWindow);
+    drawMostRecentMove(gameWindow);
+    drawSelectedOutline(gameWindow);
     drawPieces(gameWindow);
-    drawSelectedPiece(gameWindow, input);
 }
 
 
-void Board::dragDropPiece(const Input& input)
+void Board::movePieceManually(const Input& input)
 {
     if (input.mousePos.x >= tileSize * 8) return;
 
@@ -62,9 +62,9 @@ void Board::dragDropPiece(const Input& input)
             board[selectedPiece] = 0;
 
             // Every time a move is made, set the highlight squares appropriately
-            highlightedSquares.clear();
-            highlightedSquares.push_back(selectedPiece);
-            highlightedSquares.push_back(targetPiece);
+            mostRecentMove.clear();
+            mostRecentMove.push_back(selectedPiece);
+            mostRecentMove.push_back(targetPiece);
         }
         selectedPiece = -1;
     }
@@ -79,6 +79,7 @@ void Board::drawTiles(sf::RenderWindow& gameWindow)
         tile.setPosition(x * tileSize, y * tileSize);
         sf::Color tileColor = ((x + y) % 2 == 0) ? lightSquareCol : darkSquareCol;
         tile.setFillColor(tileColor);
+
         gameWindow.draw(tile);
     }
 }
@@ -90,9 +91,6 @@ void Board::drawPieces(sf::RenderWindow& gameWindow)
     for (int y = 0; y != 8; ++y)
     {
         const int index = x + y * 8;
-
-        if (selectedPiece == index) continue;
-
         const int piece = board[index];
 
         if (piece == 0) continue;
@@ -104,21 +102,13 @@ void Board::drawPieces(sf::RenderWindow& gameWindow)
         gameWindow.draw(pieceSprites[spriteIndex]);
     }
 }
-void Board::drawSelectedPiece(sf::RenderWindow& gameWindow, const Input& input)
-{
-    if (selectedPiece != -1)
-    {
-        const int spriteIndex = board[selectedPiece] - 1;
-        pieceSprites[spriteIndex].setPosition(input.mousePos.x - tileSize / 2, input.mousePos.y - tileSize / 2);
-        gameWindow.draw(pieceSprites[spriteIndex]);
-    }
-}
-void Board::drawHighlightedSquares(sf::RenderWindow& gameWindow)
+
+void Board::drawMostRecentMove(sf::RenderWindow& gameWindow)
 {
     sf::RectangleShape highlight(sf::Vector2f(tileSize, tileSize));
-    highlight.setFillColor(highlightCol);
+    highlight.setFillColor(mostRecentMoveCol);
 
-    for (const int& i : highlightedSquares)
+    for (const int& i : mostRecentMove)
     {
         int x = i % 8;
         int y = i / 8;
@@ -126,6 +116,16 @@ void Board::drawHighlightedSquares(sf::RenderWindow& gameWindow)
         highlight.setPosition(sf::Vector2f(x * tileSize, y * tileSize));
         gameWindow.draw(highlight);
     }
+}
+
+void Board::drawSelectedOutline(sf::RenderWindow& gameWindow)
+{
+    sf::RectangleShape outline(sf::Vector2f(tileSize, tileSize));
+    outline.setFillColor(sf::Color::Transparent);
+    outline.setOutlineThickness(-5);
+    outline.setOutlineColor(selectedOutlineCol);
+    outline.setPosition(sf::Vector2f((selectedPiece % 8) * tileSize, (selectedPiece / 8) * tileSize));
+    gameWindow.draw(outline);
 }
 
 int Board::getPieceColor(int index)

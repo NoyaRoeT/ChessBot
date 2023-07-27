@@ -30,7 +30,7 @@ public:
 
 private:
 	int selectedPiece;
-	std::vector<int> highlightedSquares;
+	std::vector<int> mostRecentMove;
 
 	// Drawing related members
 	int tileSize;
@@ -39,19 +39,20 @@ private:
 	std::vector<sf::Sprite> pieceSprites;
 	sf::Color lightSquareCol;
 	sf::Color darkSquareCol;
-	sf::Color highlightCol;
+	sf::Color mostRecentMoveCol;
+	sf::Color selectedOutlineCol;
 
 	// Static members
 	static const std::string startingFen;
 
 	// User input
-	void dragDropPiece(const Input& input);
+	void movePieceManually(const Input& input);
 
 	// Draw functions
 	void drawTiles(sf::RenderWindow& gameWindow);
+	void drawMostRecentMove(sf::RenderWindow& gameWindow);
+	void drawSelectedOutline(sf::RenderWindow& gameWindow);
 	void drawPieces(sf::RenderWindow& gameWindow);
-	void drawSelectedPiece(sf::RenderWindow& gameWindow, const Input& input);
-	void drawHighlightedSquares(sf::RenderWindow& gameWindow);
 
 	// Util functions
 	int getPieceColor(int index);
