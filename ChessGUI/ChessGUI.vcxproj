@@ -24,6 +24,7 @@
     <ProjectGuid>{5b15e59a-7c09-4f12-ac36-324e4d381e3f}</ProjectGuid>
     <RootNamespace>ChessGUI</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>ChessGUI</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -155,15 +156,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Bitboard.cpp" />
+    <ClCompile Include="src\Engine.cpp" />
     <ClCompile Include="src\Board.cpp" />
     <ClCompile Include="src\Game.cpp" />
     <ClCompile Include="src\Input.cpp" />
     <ClCompile Include="src\Main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\Bitboard.h" />
     <ClInclude Include="include\Board.h" />
+    <ClInclude Include="include\Engine.h" />
     <ClInclude Include="include\Game.h" />
     <ClInclude Include="include\Input.h" />
+    <ClInclude Include="include\Move.h" />
+    <ClInclude Include="include\Piece.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

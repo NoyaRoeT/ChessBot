@@ -2,11 +2,13 @@
 #include <Input.h>
 #include <sstream>
 #include <iostream>
+#include <Piece.h>
+#include <Engine.h>
 
-const std::string Board::startingFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 
-Board::Board(const int& width) : selectedPiece(-1), board(64, 0), tileSize(width / 8), lightSquareCol(234, 234, 210), darkSquareCol(75, 114, 153), mostRecentMoveCol(240, 0, 0, 100), selectedOutlineCol(240, 240, 0)
+
+Board::Board(const int& width) : selectedIndex(-1), board(64, 0), tileSize(width / 8), lightSquareCol(234, 234, 210), darkSquareCol(75, 114, 153), mostRecentMoveCol(240, 0, 0, 100), selectedOutlineCol(240, 240, 0)
 {
 	tile = sf::RectangleShape(sf::Vector2f(tileSize, tileSize));
 	piecesTexture.loadFromFile("assets/chess_pieces_sprites.png");
@@ -22,51 +24,50 @@ Board::Board(const int& width) : selectedPiece(-1), board(64, 0), tileSize(width
 		pieceSprites.push_back(sprite);
 	}
 
-    loadFen(Board::startingFen);
 }
 
 
-void Board::update(const Input& input)
+void Board::update(const Input& input, Engine& engine)
 {
 
-    movePieceManually(input);
+    movePieceManually(input, engine);
 }
 
-void Board::render(sf::RenderWindow& gameWindow, const Input& input)
+void Board::render(sf::RenderWindow& gameWindow, const Engine& engine)
 {
     drawTiles(gameWindow);
     drawMostRecentMove(gameWindow);
     drawSelectedOutline(gameWindow);
-    drawPieces(gameWindow);
+    drawPieces(gameWindow, engine);
 }
 
 
-void Board::movePieceManually(const Input& input)
+void Board::movePieceManually(const Input& input, Engine& engine)
 {
-    if (input.mousePos.x >= tileSize * 8) return;
+    if (input.mousePos.x >= tileSize * 8 || input.mousePos.x < 0) return;
 
-    int mouseTileX = input.mousePos.x / tileSize;
-    int mouseTileY = input.mousePos.y / tileSize;
+  
+    const int boardX = 7 - input.mousePos.x / tileSize;
+    const int boardY = 7 - input.mousePos.y / tileSize;
 
-    if (selectedPiece == -1 && input.isMbPressed(sf::Mouse::Button::Left) && board[mouseTileX + mouseTileY * 8] != 0)
+    if (selectedIndex == -1 && input.isMbPressed(sf::Mouse::Button::Left) && !engine.isSquareEmpty(boardX + boardY * 8))
     {
-        selectedPiece = mouseTileX + mouseTileY * 8;
+        selectedIndex = boardX + boardY * 8;
     }
-    else if (selectedPiece != -1 && input.isMbPressed(sf::Mouse::Button::Left))
+    else if (selectedIndex != -1 && input.isMbPressed(sf::Mouse::Button::Left))
     {
-        int targetPiece = mouseTileX + mouseTileY * 8;
-        if (board[targetPiece] == 0 || getPieceColor(targetPiece) != getPieceColor(selectedPiece))
+        int targetIndex = boardX + boardY * 8;
+        if (engine.isSquareEmpty(targetIndex) || engine.getPieceColor(targetIndex) != engine.getPieceColor(selectedIndex))
         {
 
-            board[targetPiece] = board[selectedPiece];
-            board[selectedPiece] = 0;
+            engine.makeMove(selectedIndex, targetIndex);
 
             // Every time a move is made, set the highlight squares appropriately
             mostRecentMove.clear();
-            mostRecentMove.push_back(selectedPiece);
-            mostRecentMove.push_back(targetPiece);
+            mostRecentMove.push_back(selectedIndex);
+            mostRecentMove.push_back(targetIndex);
         }
-        selectedPiece = -1;
+        selectedIndex = -1;
     }
 }
 
@@ -83,15 +84,19 @@ void Board::drawTiles(sf::RenderWindow& gameWindow)
         gameWindow.draw(tile);
     }
 }
-void Board::drawPieces(sf::RenderWindow& gameWindow)
+void Board::drawPieces(sf::RenderWindow& gameWindow, const Engine& engine)
 {
     // Pieces are drawn from 'top to bottom'.
     // The piece at index 0 is at the top left of the board.
-    for (int x = 0; x != 8; ++x)
-    for (int y = 0; y != 8; ++y)
+    const std::vector<int>& board = engine.getBoard();
+
+    for (int i = 0; i != 8; ++i)
+    for (int j = 0; j != 8; ++j)
     {
-        const int index = x + y * 8;
-        const int piece = board[index];
+        const int x = 7 - i;
+        const int y = 7 - j;
+
+        const int piece = board[i + j * 8];
 
         if (piece == 0) continue;
 
@@ -110,8 +115,8 @@ void Board::drawMostRecentMove(sf::RenderWindow& gameWindow)
 
     for (const int& i : mostRecentMove)
     {
-        int x = i % 8;
-        int y = i / 8;
+        int x = 7 - i % 8;
+        int y = 7 - i / 8;
 
         highlight.setPosition(sf::Vector2f(x * tileSize, y * tileSize));
         gameWindow.draw(highlight);
@@ -120,77 +125,14 @@ void Board::drawMostRecentMove(sf::RenderWindow& gameWindow)
 
 void Board::drawSelectedOutline(sf::RenderWindow& gameWindow)
 {
-    sf::RectangleShape outline(sf::Vector2f(tileSize, tileSize));
-    outline.setFillColor(sf::Color::Transparent);
-    outline.setOutlineThickness(-5);
-    outline.setOutlineColor(selectedOutlineCol);
-    outline.setPosition(sf::Vector2f((selectedPiece % 8) * tileSize, (selectedPiece / 8) * tileSize));
-    gameWindow.draw(outline);
-}
-
-int Board::getPieceColor(int index)
-{
-    int targetPiece = board[index];
-    if (targetPiece == 0) return -1;
-    else if (targetPiece < 7) return 0;
-    else return 1;
-}
-
-void Board::loadFen(const std::string& fen)
-{
-    // FEN starts with rank 8 -> 1 and a->h
-    // White pieces are uppercase letters
-    std::stringstream fenStream(fen);
-
-    // RESET BOARD
-    for (int& piece : board) piece = 0;
-
-    // READ PIECE PLACEMENT DATA
-    std::string piecePlacementStr;
-    fenStream >> piecePlacementStr;
-
-    int x = 0, y = 0;
-    for (const char& c : piecePlacementStr)
+    if (selectedIndex != -1)
     {
-
-        if (c == '/')
-        {
-            x = 0;
-            ++y;
-            continue;
-        }
-
-        if (isdigit(c))
-        {
-            const int numEmptySqrs = c - '0';
-            x += numEmptySqrs;
-        }
-        else
-        {
-            int piece = 0;
-            switch (tolower(c)) {
-            case 'k':
-                piece = KING;
-                break;
-            case 'q':
-                piece = QUEEN;
-                break;
-            case 'b':
-                piece = BISHOP;
-                break;
-            case 'n':
-                piece = KNIGHT;
-                break;
-            case 'r':
-                piece = ROOK;
-                break;
-            case 'p':
-                piece = PAWN;
-                break;
-            }
-            int color = (islower(c)) ? 1 : 0;
-            board[x + y * 8] = piece + color * 6;
-            ++x;
-        }
+        sf::RectangleShape outline(sf::Vector2f(tileSize, tileSize));
+        outline.setFillColor(sf::Color::Transparent);
+        outline.setOutlineThickness(-5);
+        outline.setOutlineColor(selectedOutlineCol);
+        outline.setPosition(sf::Vector2f((7 - selectedIndex % 8) * tileSize, (7 - selectedIndex / 8) * tileSize));
+        gameWindow.draw(outline);
     }
 }
+

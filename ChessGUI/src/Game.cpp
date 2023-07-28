@@ -29,10 +29,10 @@ void Game::start()
 
 void Game::update()
 {
-    board.update(input);
+    board.update(input, engine);
 }
 
 void Game::render()
 {
-    board.render(window, input);
+    board.render(window, engine);
 }

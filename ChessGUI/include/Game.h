@@ -3,6 +3,7 @@
 #include <SFML/Graphics.hpp>
 #include <Input.h>
 #include <Board.h>
+#include <Engine.h>
 
 /*
 * Responbile for top-level management of the application.
@@ -37,4 +38,5 @@ private:
 	sf::Event event;
 	Input input;
 	Board board;
+	Engine engine;
 };
