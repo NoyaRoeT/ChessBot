@@ -16,6 +16,8 @@ const int Bitboard::debruijnIndex[64] = {
 
 const Bitboard Bitboard::hFile(0x0101010101010101);
 const Bitboard Bitboard::aFile(0x8080808080808080);
+const Bitboard Bitboard::gFile(0x0202020202020202);
+const Bitboard Bitboard::bFile(0x4040404040404040);
 
 Bitboard::Bitboard() : bitboard(0) {}
 

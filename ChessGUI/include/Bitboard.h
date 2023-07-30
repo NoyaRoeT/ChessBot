@@ -45,6 +45,8 @@ public:
 
 	static const Bitboard hFile;
 	static const Bitboard aFile;
+	static const Bitboard gFile;
+	static const Bitboard bFile;
 
 private:
 	uint64_t bitboard;

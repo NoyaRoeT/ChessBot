@@ -10,6 +10,8 @@ Engine::Engine() : board(64, 0)
     loadFen(startingFen);
 
     precomputePawnAttacks();
+    precomputeKnightAttacks();
+    precomputeKingAttacks();
 }
 
 
@@ -136,5 +138,60 @@ void Engine::precomputePawnAttacks()
     for (int idx = 0; idx != 64; ++idx)
     {
         pawnAttackMasks[i].push_back(genPawnAttackMask(i, idx));
+    }
+}
+
+Bitboard Engine::genKnightAttackMask(int index)
+{
+    Bitboard attackMask;
+    Bitboard pieceOccupancy;
+
+    pieceOccupancy.setBit(index, 1);
+
+    attackMask |= pieceOccupancy << 17 & (~Bitboard::hFile); //nnW
+    attackMask |= pieceOccupancy << 10 & ~(Bitboard::gFile | Bitboard::hFile); //nwW
+    attackMask |= pieceOccupancy << 15 & (~Bitboard::aFile); //nnE
+    attackMask |= pieceOccupancy << 6 & ~(Bitboard::aFile | Bitboard::bFile);
+    attackMask |= pieceOccupancy >> 15 & (~Bitboard::hFile); //ssW
+    attackMask |= pieceOccupancy >> 6 & ~(Bitboard::hFile | Bitboard::gFile); //swW
+    attackMask |= pieceOccupancy >> 17 & ~(Bitboard::aFile); //ssE
+    attackMask |= pieceOccupancy >> 10 & ~(Bitboard::aFile| Bitboard::bFile); //seE
+
+    return attackMask;
+}
+
+void Engine::precomputeKnightAttacks()
+{
+    knightAttackMasks = std::vector<Bitboard>();
+
+    for (int i = 0; i != 64; ++i)
+    {
+        knightAttackMasks.push_back(genKnightAttackMask(i));
+    }
+    
+}
+
+Bitboard Engine::genKingAttackMask(int index)
+{
+    Bitboard attackMask;
+    Bitboard pieceOccupancy;
+    pieceOccupancy.setBit(index, 1);
+
+    
+    attackMask |= pieceOccupancy << 1 & (~Bitboard::hFile) | pieceOccupancy >> 1 & (~Bitboard::aFile);
+    pieceOccupancy |= attackMask;
+    attackMask |= pieceOccupancy << 8;
+    attackMask |= pieceOccupancy >> 8;
+
+    return attackMask;
+}
+
+void Engine::precomputeKingAttacks()
+{
+    kingAttackMasks = std::vector<Bitboard>();
+
+    for (int i = 0; i != 64; ++i)
+    {
+        kingAttackMasks.push_back(genKingAttackMask(i));
     }
 }

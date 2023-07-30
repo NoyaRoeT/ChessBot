@@ -16,9 +16,6 @@ public:
 
 	void update(const Input& input, Engine& engine);
 	void render(sf::RenderWindow& gameWindow, const Engine& engine);
-	void loadFen(const std::string& fen);
-
-
 
 private:
 	// Manual piece movement
