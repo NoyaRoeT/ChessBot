@@ -2,9 +2,24 @@
 #include <bitset>
 #include <iostream>
 
+const uint64_t Bitboard::debruijn = 0x03f79d71b4cb0a89;
+const int Bitboard::debruijnIndex[64] = {
+	0, 47,  1, 56, 48, 27,  2, 60,
+   57, 49, 41, 37, 28, 16,  3, 61,
+   54, 58, 35, 52, 50, 42, 21, 44,
+   38, 32, 29, 23, 17, 11,  4, 62,
+   46, 55, 26, 59, 40, 36, 15, 53,
+   34, 51, 20, 43, 31, 22, 10, 45,
+   25, 39, 14, 33, 19, 30,  9, 24,
+   13, 18,  8, 12,  7,  6,  5, 63
+};
+
+const Bitboard Bitboard::hFile(0x0101010101010101);
+const Bitboard Bitboard::aFile(0x8080808080808080);
+
 Bitboard::Bitboard() : bitboard(0) {}
 
-Bitboard::Bitboard(int64_t bits) : bitboard(bits)
+Bitboard::Bitboard(uint64_t bits) : bitboard(bits)
 {
 }
 
@@ -138,11 +153,21 @@ Bitboard Bitboard::operator~() const
 	return Bitboard(~(this->bitboard));
 }
 
+bool Bitboard::operator==(Bitboard const& rhs) const
+{
+	return this->bitboard == rhs.bitboard;
+}
+
 void Bitboard::setBit(int index, int value)
 {
 	int64_t one = 1;
 	if (value == 1) bitboard |= (one << index);
 	else bitboard ^= (one << index);
+}
+
+int64_t Bitboard::get() const
+{
+	return bitboard;
 }
 
 void Bitboard::printBoard() const
@@ -156,4 +181,11 @@ void Bitboard::printBoard() const
 		}
 		std::cout << std::endl;
 	}
+}
+
+int Bitboard::bitScanForward()
+{
+	// Returns index of LSB
+	if (bitboard == 0) return -1;
+	return Bitboard::debruijnIndex[((bitboard ^ (bitboard - 1)) * Bitboard::debruijn) >> 58];
 }

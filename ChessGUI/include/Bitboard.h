@@ -9,7 +9,7 @@ class Bitboard
 {
 public:
 	Bitboard();
-	Bitboard(int64_t bits);
+	Bitboard(uint64_t bits);
 
 	// Operator overloads
 	Bitboard operator+(const Bitboard& rhs) const;
@@ -35,10 +35,21 @@ public:
 	Bitboard operator^(Bitboard const& rhs) const;
 	Bitboard& operator^=(Bitboard const& rhs);
 	Bitboard operator~() const;
+	bool operator==(Bitboard const& rhs) const;
 
+	int64_t get() const;
 	void setBit(int index, int value);
 	void printBoard() const;
 
+	int bitScanForward();
+
+	static const Bitboard hFile;
+	static const Bitboard aFile;
+
 private:
-	int64_t bitboard;
+	uint64_t bitboard;
+
+	static const uint64_t debruijn;
+	static const int debruijnIndex[64];
+
 };

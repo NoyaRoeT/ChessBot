@@ -11,18 +11,23 @@ public:
 
 	const std::vector<int>& getBoard() const;
 
-	Bitboard getOccupiedSquares(int color);
-	bool isSquareEmpty(int index);
 	void makeMove(const int& origin, const int& target);
-	int getPieceColor(int index);
+	
 
+	bool isSquareEmpty(int index);
+	int getPieceColor(int index);
 	void loadFen(const std::string& fen);
 
 
+	std::vector<std::vector<Bitboard>> pawnAttackMasks;
 private:
 	std::vector<int> board;
 	std::vector<Bitboard> piecePositions;
 
-	static const std::string startingFen;
 
+	Bitboard genPawnAttackMask(int color, int index);
+	void precomputePawnAttacks();
+
+	// Class members
+	static const std::string startingFen;
 };

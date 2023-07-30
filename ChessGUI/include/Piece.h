@@ -7,3 +7,6 @@ constexpr unsigned int BISHOP = 3;
 constexpr unsigned int KNIGHT = 4;
 constexpr unsigned int ROOK = 5;
 constexpr unsigned int PAWN = 6;
+
+constexpr unsigned int WHITE = 0;
+constexpr unsigned int BLACK = 1;

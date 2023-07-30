@@ -8,6 +8,8 @@ const std::string Engine::startingFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQ
 Engine::Engine() : board(64, 0)
 {
     loadFen(startingFen);
+
+    precomputePawnAttacks();
 }
 
 
@@ -22,19 +24,6 @@ int Engine::getPieceColor(int index)
     if (targetPiece == 0) return -1;
     else if (targetPiece < 7) return 0;
     else return 1;
-}
-
-Bitboard Engine::getOccupiedSquares(int color)
-{
-    int start = color * 6;
-    int end = start + 6;
-    Bitboard occupied;
-    for (int i = start; i != end; ++i)
-    {
-        occupied |= piecePositions[i];
-    }
-
-    return occupied;
 }
 
 bool Engine::isSquareEmpty(int index)
@@ -55,9 +44,6 @@ void Engine::makeMove(const int& origin, const int& target)
     piecePositions[originPiece - 1].setBit(origin, 0);
     piecePositions[originPiece - 1].setBit(target, 1);
 
-    Bitboard occupied = getOccupiedSquares(0) | getOccupiedSquares(1);
-    occupied.printBoard();
-    std::cout << std::endl;
 }
 
 void Engine::loadFen(const std::string& fen)
@@ -118,5 +104,37 @@ void Engine::loadFen(const std::string& fen)
             board[x + y * 8] = piece + color * 6;
             --x;
         }
+    }
+}
+
+Bitboard Engine::genPawnAttackMask(int color, int index)
+{
+    Bitboard attackMask;
+    Bitboard pieceOccupancy;
+
+    pieceOccupancy.setBit(index, 1);
+
+    if (color == WHITE)
+    {
+        attackMask |= pieceOccupancy << 9 & (~Bitboard::hFile);
+        attackMask |= pieceOccupancy << 7 & (~Bitboard::aFile);
+    }
+    else
+    {
+        attackMask |= pieceOccupancy >> 7 & (~Bitboard::hFile);
+        attackMask |= pieceOccupancy >> 9 & (~Bitboard::aFile);
+    }
+
+    return attackMask;
+}
+
+void Engine::precomputePawnAttacks()
+{
+    pawnAttackMasks = std::vector<std::vector<Bitboard>>(2);
+
+    for (int i = 0; i != 2; ++i)
+    for (int idx = 0; idx != 64; ++idx)
+    {
+        pawnAttackMasks[i].push_back(genPawnAttackMask(i, idx));
     }
 }
