@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <Bitboard.h>
+#include <Move.h>
 
 
 class Engine 
@@ -13,11 +14,15 @@ public:
 
 	void makeMove(const int& origin, const int& target);
 	
-
 	bool isSquareEmpty(int index);
 	int getPieceColor(int index);
 	void loadFen(const std::string& fen);
 
+	Bitboard getColorPieceOccupancies(int color);
+	Bitboard getOccupiedSquares();
+
+	// Single Piece Move Generation (to highlight possible moves for the player)
+	std::vector<Move> getPieceMove(int origin);
 
 private:
 	// Board state
@@ -29,8 +34,9 @@ private:
 	std::vector<Bitboard> knightAttackMasks;
 	std::vector<Bitboard> kingAttackMasks;
 
+	std::vector<std::vector<Bitboard>> rayTable;
 
-	// Leaping piece attack table precomputation functions
+	// Precomputation
 	Bitboard genPawnAttackMask(int color, int index);
 	void precomputePawnAttacks();
 	Bitboard genKnightAttackMask(int index);
@@ -38,10 +44,11 @@ private:
 	Bitboard genKingAttackMask(int index);
 	void precomputeKingAttacks();
 
-public:
-	std::vector<std::vector<Bitboard>> rayTable;
 	Bitboard genRay(int index, int dir);
 	void fillRayTable();
+
+	// Single Piece Move Generation
+	std::vector<Move> getPawnMove(int origin, int color);
 
 	// Preset positions
 	static const std::string startingFen;

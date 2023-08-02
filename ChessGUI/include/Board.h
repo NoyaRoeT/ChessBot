@@ -2,6 +2,7 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
 #include <string>
+#include <Move.h>
 
 class Input;
 class Engine;
@@ -20,6 +21,7 @@ public:
 private:
 	// Manual piece movement
 	int selectedIndex;
+	std::vector<Move> selectedPieceMoves;
 
 	// Highlighted
 	std::vector<int> mostRecentMove;
@@ -33,6 +35,7 @@ private:
 	sf::Color darkSquareCol;
 	sf::Color mostRecentMoveCol;
 	sf::Color selectedOutlineCol;
+	sf::Color selectedMovesOutlineCol;
 
 
 	// User input
@@ -43,5 +46,6 @@ private:
 	void drawMostRecentMove(sf::RenderWindow& gameWindow);
 	void drawSelectedOutline(sf::RenderWindow& gameWindow);
 	void drawPieces(sf::RenderWindow& gameWindow, const Engine& engine);
+	void drawSelectedPieceMoves(sf::RenderWindow& gameWindow);
 
 };

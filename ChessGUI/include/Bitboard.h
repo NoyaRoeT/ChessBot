@@ -36,17 +36,22 @@ public:
 	Bitboard& operator^=(Bitboard const& rhs);
 	Bitboard operator~() const;
 	bool operator==(Bitboard const& rhs) const;
+	bool operator!=(Bitboard const& rhs) const;
 
 	int64_t get() const;
 	void setBit(int index, int value);
 	void printBoard() const;
 
 	int bitScanForward();
+	Bitboard resetLSB();
 
 	static const Bitboard hFile;
 	static const Bitboard aFile;
 	static const Bitboard gFile;
 	static const Bitboard bFile;
+
+	static const Bitboard rank4;
+	static const Bitboard rank5;
 
 private:
 	uint64_t bitboard;

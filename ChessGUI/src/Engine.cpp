@@ -111,6 +111,28 @@ void Engine::loadFen(const std::string& fen)
     }
 }
 
+Bitboard Engine::getColorPieceOccupancies(int color)
+{
+    int start = 0 + color * 6;
+    int end = 6 + color * 6;
+
+    Bitboard result;
+
+    for (int i = start; i != end; ++i)
+    {
+        result |= piecePositions[i];
+    }
+
+    return result;
+}
+
+Bitboard Engine::getOccupiedSquares()
+{
+    Bitboard result;
+    for (const auto& i : piecePositions) result |= i;
+    return result;
+}
+
 Bitboard Engine::genPawnAttackMask(int color, int index)
 {
     Bitboard attackMask;
@@ -249,4 +271,51 @@ void Engine::fillRayTable()
         }
     }
 
+}
+
+std::vector<Move> Engine::getPieceMove(int origin)
+{
+    const int originPiece = board[origin];
+    const int color = (originPiece > 6) ? BLACK : WHITE;
+    const int piece = originPiece - color * 6;
+
+    if (piece == PAWN) return getPawnMove(origin, color);
+    else return std::vector<Move>();
+}
+
+std::vector<Move> Engine::getPawnMove(int origin, int color)
+{
+    if (board[origin] == 0) return std::vector<Move>();
+
+    Bitboard targets;
+    Bitboard pawnPos;
+    pawnPos.setBit(origin, 1);
+
+    // Get captures
+    const Bitboard oppColorPieces = getColorPieceOccupancies(1 - color);
+    const Bitboard& attacks = pawnAttackMasks[color][origin] & oppColorPieces;
+
+    // Get pushes
+    const Bitboard& empty = ~getOccupiedSquares();
+    if (color == 0)
+    {
+        const Bitboard& singlePushTargets = (pawnPos << VERTICAL) & empty;
+        const Bitboard& doublePushTargets = (singlePushTargets << VERTICAL) & empty & Bitboard::rank4;
+        targets |= singlePushTargets | doublePushTargets | attacks;
+    }   
+    else
+    {
+        const Bitboard& singlePushTargets = (pawnPos >> VERTICAL) & empty;
+        const Bitboard& doublePushTargets = (singlePushTargets >> VERTICAL) & empty & Bitboard::rank5;
+        targets |= singlePushTargets | doublePushTargets | attacks;
+    }
+   
+    std::vector<Move> moves;
+    while (targets != 0)
+    {
+        const int targetIndex = targets.bitScanForward();
+        moves.push_back(Move(origin, targetIndex));
+        targets = targets.resetLSB();
+    }
+    return moves;
 }

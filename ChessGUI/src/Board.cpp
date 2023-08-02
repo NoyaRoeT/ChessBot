@@ -8,7 +8,7 @@
 
 
 
-Board::Board(const int& width) : selectedIndex(-1), board(64, 0), tileSize(width / 8), lightSquareCol(234, 234, 210), darkSquareCol(75, 114, 153), mostRecentMoveCol(240, 0, 0, 100), selectedOutlineCol(240, 240, 0)
+Board::Board(const int& width) : selectedIndex(-1), board(64, 0), tileSize(width / 8), lightSquareCol(234, 234, 210), darkSquareCol(75, 114, 153), mostRecentMoveCol(240, 0, 0, 100), selectedOutlineCol(240, 240, 0), selectedMovesOutlineCol(0, 240, 0)
 {
 	tile = sf::RectangleShape(sf::Vector2f(tileSize, tileSize));
 	piecesTexture.loadFromFile("assets/chess_pieces_sprites.png");
@@ -38,6 +38,7 @@ void Board::render(sf::RenderWindow& gameWindow, const Engine& engine)
     drawTiles(gameWindow);
     drawMostRecentMove(gameWindow);
     drawSelectedOutline(gameWindow);
+    drawSelectedPieceMoves(gameWindow);
     drawPieces(gameWindow, engine);
 }
 
@@ -53,6 +54,7 @@ void Board::movePieceManually(const Input& input, Engine& engine)
     if (selectedIndex == -1 && input.isMbPressed(sf::Mouse::Button::Left) && !engine.isSquareEmpty(boardX + boardY * 8))
     {
         selectedIndex = boardX + boardY * 8;
+        selectedPieceMoves = engine.getPieceMove(selectedIndex);
     }
     else if (selectedIndex != -1 && input.isMbPressed(sf::Mouse::Button::Left))
     {
@@ -61,6 +63,9 @@ void Board::movePieceManually(const Input& input, Engine& engine)
         {
 
             engine.makeMove(selectedIndex, targetIndex);
+
+            // Clear possible moves for selected piece
+            selectedPieceMoves.clear();
 
             // Every time a move is made, set the highlight squares appropriately
             mostRecentMove.clear();
@@ -133,6 +138,22 @@ void Board::drawSelectedOutline(sf::RenderWindow& gameWindow)
         outline.setOutlineColor(selectedOutlineCol);
         outline.setPosition(sf::Vector2f((7 - selectedIndex % 8) * tileSize, (7 - selectedIndex / 8) * tileSize));
         gameWindow.draw(outline);
+    }
+}
+
+void Board::drawSelectedPieceMoves(sf::RenderWindow& gameWindow)
+{
+    if (selectedIndex != -1)
+    {
+        sf::RectangleShape outline(sf::Vector2f(tileSize, tileSize));
+        outline.setFillColor(sf::Color::Transparent);
+        outline.setOutlineThickness(-5);
+        outline.setOutlineColor(selectedMovesOutlineCol);
+        for (const Move& m : selectedPieceMoves)
+        {
+            outline.setPosition(sf::Vector2f((7 - m.targetIndex % 8) * tileSize, (7 - m.targetIndex / 8) * tileSize));
+            gameWindow.draw(outline);
+        }
     }
 }
 

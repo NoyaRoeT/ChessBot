@@ -53,5 +53,8 @@
     <ClInclude Include="include\Bitboard.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\Move.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

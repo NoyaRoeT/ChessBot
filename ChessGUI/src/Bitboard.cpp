@@ -19,6 +19,9 @@ const Bitboard Bitboard::aFile(0x8080808080808080);
 const Bitboard Bitboard::gFile(0x0202020202020202);
 const Bitboard Bitboard::bFile(0x4040404040404040);
 
+const Bitboard Bitboard::rank4(0x00000000FF000000);
+const Bitboard Bitboard::rank5(0x000000FF00000000);
+
 Bitboard::Bitboard() : bitboard(0) {}
 
 Bitboard::Bitboard(uint64_t bits) : bitboard(bits)
@@ -160,6 +163,11 @@ bool Bitboard::operator==(Bitboard const& rhs) const
 	return this->bitboard == rhs.bitboard;
 }
 
+bool Bitboard::operator!=(Bitboard const& rhs) const
+{
+	return this->bitboard != rhs.bitboard;
+}
+
 void Bitboard::setBit(int index, int value)
 {
 	int64_t one = 1;
@@ -190,4 +198,9 @@ int Bitboard::bitScanForward()
 	// Returns index of LSB
 	if (bitboard == 0) return -1;
 	return Bitboard::debruijnIndex[((bitboard ^ (bitboard - 1)) * Bitboard::debruijn) >> 58];
+}
+
+Bitboard Bitboard::resetLSB()
+{
+	return bitboard & (bitboard - 1);
 }
