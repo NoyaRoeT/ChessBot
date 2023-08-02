@@ -5,6 +5,7 @@
 
 const std::string Engine::startingFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
+
 Engine::Engine() : board(64, 0)
 {
     loadFen(startingFen);
@@ -12,6 +13,7 @@ Engine::Engine() : board(64, 0)
     precomputePawnAttacks();
     precomputeKnightAttacks();
     precomputeKingAttacks();
+    fillRayTable();
 }
 
 
@@ -118,13 +120,13 @@ Bitboard Engine::genPawnAttackMask(int color, int index)
 
     if (color == WHITE)
     {
-        attackMask |= pieceOccupancy << 9 & (~Bitboard::hFile);
-        attackMask |= pieceOccupancy << 7 & (~Bitboard::aFile);
+        attackMask |= pieceOccupancy << DIAG_TL_BR & (~Bitboard::hFile);
+        attackMask |= pieceOccupancy << DIAG_BL_TR & (~Bitboard::aFile);
     }
     else
     {
-        attackMask |= pieceOccupancy >> 7 & (~Bitboard::hFile);
-        attackMask |= pieceOccupancy >> 9 & (~Bitboard::aFile);
+        attackMask |= pieceOccupancy >> DIAG_BL_TR & (~Bitboard::hFile);
+        attackMask |= pieceOccupancy >> DIAG_TL_BR & (~Bitboard::aFile);
     }
 
     return attackMask;
@@ -178,10 +180,10 @@ Bitboard Engine::genKingAttackMask(int index)
     pieceOccupancy.setBit(index, 1);
 
     
-    attackMask |= pieceOccupancy << 1 & (~Bitboard::hFile) | pieceOccupancy >> 1 & (~Bitboard::aFile);
+    attackMask |= pieceOccupancy << HORIZONTAL & (~Bitboard::hFile) | pieceOccupancy >> HORIZONTAL & (~Bitboard::aFile);
     pieceOccupancy |= attackMask;
-    attackMask |= pieceOccupancy << 8;
-    attackMask |= pieceOccupancy >> 8;
+    attackMask |= pieceOccupancy << VERTICAL;
+    attackMask |= pieceOccupancy >> VERTICAL;
 
     return attackMask;
 }
@@ -194,4 +196,57 @@ void Engine::precomputeKingAttacks()
     {
         kingAttackMasks.push_back(genKingAttackMask(i));
     }
+}
+
+Bitboard Engine::genRay(int dir, int index)
+{
+    Bitboard rayMask;
+    Bitboard target;
+    target.setBit(index, 1);
+
+    int numShifts, shiftAmt, x = index % 8, y = index / 8;
+
+    if (dir == NORTH) numShifts = 7 - y;
+    else if (dir == SOUTH) numShifts = y;
+    else if (dir == EAST) numShifts = x;
+    else if (dir == WEST) numShifts = 7 - x;
+    else if (dir == NORTH_EAST) numShifts = std::min(x, 7 - y);
+    else if (dir == SOUTH_EAST) numShifts = std::min(x, y);
+    else if (dir == SOUTH_WEST) numShifts = std::min(7-x, y);
+    else numShifts = std::min(7-x, 7-y);
+
+    if (dir == NORTH || dir == SOUTH) shiftAmt = VERTICAL;
+    else if (dir == EAST || dir == WEST) shiftAmt = HORIZONTAL;
+    else if (dir == NORTH_EAST || dir == SOUTH_WEST) shiftAmt = DIAG_BL_TR;
+    else shiftAmt = DIAG_TL_BR;
+
+    for (int i = 0; i != numShifts; ++i)
+    {
+        if (dir < 4)
+        {
+            target <<= shiftAmt;
+            rayMask |= target;
+        }
+        else
+        {
+            target >>= shiftAmt;
+            rayMask |= target;
+        }
+    }
+
+    return rayMask;
+}
+
+void Engine::fillRayTable()
+{
+    rayTable = std::vector<std::vector<Bitboard>>(8, std::vector<Bitboard>(64));
+
+    for (int dir = 0; dir != 8; ++dir)
+    {
+        for (int i = 0; i != 64; ++i)
+        {
+            rayTable[dir][i] = genRay(dir, i);
+        }
+    }
+
 }

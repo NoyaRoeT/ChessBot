@@ -7,20 +7,15 @@ int main()
 {
     /*Game game;
     game.start();*/
-    Bitboard a;
-    a.setBit(19, 1);
-    a.setBit(19 - 8, 1);
-    a.printBoard();
-
-    std::cout << std::endl;
-
     Engine e;
-    for (const auto& i : e.kingAttackMasks)
+
+
+    for (int dir = 0; dir != 8; ++dir)
     {
-        i.printBoard();
-        std::cout << std::endl;
+        for (int i = 0; i != 24; i+= 4)
+        {
+            e.rayTable[dir][i].printBoard();
+            std::cout << std::endl;
+        }
     }
-
-
-    // 17, 10, 15, 6
 }
