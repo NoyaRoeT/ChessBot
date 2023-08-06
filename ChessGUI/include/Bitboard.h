@@ -46,6 +46,7 @@ public:
 	int bitScanForward() const;
 	int bitScanReverse() const;
 	Bitboard resetLSB();
+	Bitboard isolateLSB();
 
 	static const Bitboard hFile;
 	static const Bitboard aFile;

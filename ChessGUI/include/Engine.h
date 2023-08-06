@@ -47,13 +47,11 @@ private:
 	Bitboard genRay(int index, int dir);
 	void fillRayTable();
 
-	// Single Piece Move Generation
-	std::vector<Move> getPawnMoves(int origin, int color);
-	std::vector<Move> getKnightMoves(int origin, int color);
-	std::vector<Move> getKingMoves(int origin, int color);
-	std::vector<Move> getBishopMoves(int origin, int color);
-
-	// Multi Piece Move Generation
+	// Piece Move Generation
+	void getAllPawnMoves(int color, const Bitboard& empty, const Bitboard& oppColorPieces, std::vector<Move>& moves);
+	void getAllKnightMoves(int color, const Bitboard& sameColorPieces, std::vector<Move>& moves);
+	void getKingMoves(int color, const Bitboard& sameColorPieces, std::vector<Move>& moves);
+	void getAllBishopMoves(int color, const Bitboard& blockers, const Bitboard& sameColorPieces, std::vector<Move>& moves);
 
 
 	// Preset positions

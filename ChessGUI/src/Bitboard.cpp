@@ -222,3 +222,8 @@ Bitboard Bitboard::resetLSB()
 {
 	return bitboard & (bitboard - 1);
 }
+
+Bitboard Bitboard::isolateLSB()
+{
+	return Bitboard((int64_t)bitboard & (-(int64_t)bitboard));
+}
