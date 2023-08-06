@@ -48,10 +48,12 @@ private:
 	void fillRayTable();
 
 	// Piece Move Generation
-	void getAllPawnMoves(int color, const Bitboard& empty, const Bitboard& oppColorPieces, std::vector<Move>& moves);
-	void getAllKnightMoves(int color, const Bitboard& sameColorPieces, std::vector<Move>& moves);
-	void getKingMoves(int color, const Bitboard& sameColorPieces, std::vector<Move>& moves);
-	void getAllBishopMoves(int color, const Bitboard& blockers, const Bitboard& sameColorPieces, std::vector<Move>& moves);
+	void getAllPawnMoves(Bitboard pawnPositions, int color, const Bitboard& empty, const Bitboard& oppColorPieces, std::vector<Move>& moves);
+	void getAllKnightMoves(Bitboard knightPositions, const Bitboard& sameColorPieces, std::vector<Move>& moves);
+	void getKingMoves(Bitboard kingPosition, const Bitboard& sameColorPieces, std::vector<Move>& moves);
+	void getAllBishopMoves(Bitboard bishopPositions, const Bitboard& blockers, const Bitboard& sameColorPieces, std::vector<Move>& moves);
+	void getAllRookMoves(Bitboard rookPositions, const Bitboard& blockers, const Bitboard& sameColorPieces, std::vector<Move>& moves);
+	void getQueenMoves(Bitboard queenPosition, const Bitboard& blockers, const Bitboard& sameColorPieces, std::vector<Move>& moves);
 
 
 	// Preset positions

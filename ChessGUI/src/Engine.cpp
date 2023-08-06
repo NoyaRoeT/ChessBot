@@ -283,17 +283,21 @@ std::vector<Move> Engine::getPieceMoves(int origin)
     const int color = (originPiece > 6) ? BLACK : WHITE;
     const int piece = originPiece - color * 6;
 
-    const Bitboard& empty = ~getOccupiedSquares();
+    const Bitboard& pos = piecePositions[originPiece - 1];
+    const Bitboard& occupied = getOccupiedSquares();
+    const Bitboard& empty = ~occupied;
     const Bitboard& sameColorPieces = getOccupancyByColor(color);
     const Bitboard& oppColorPieces = getOccupancyByColor(1 - color);
 
     std::vector<Move> moves;
     std::vector<Move> filtered;
 
-    if (piece == PAWN) getAllPawnMoves(color, empty, oppColorPieces, moves);
-    else if (piece == KNIGHT) getAllKnightMoves(color, sameColorPieces, moves);
-    else if (piece == KING) getKingMoves(color, sameColorPieces, moves);
-    else if (piece == BISHOP) getAllBishopMoves(color, ~empty, sameColorPieces, moves);
+    if (piece == PAWN) getAllPawnMoves(pos, color, empty, oppColorPieces, moves);
+    else if (piece == KNIGHT) getAllKnightMoves(pos, sameColorPieces, moves);
+    else if (piece == KING) getKingMoves(pos, sameColorPieces, moves);
+    else if (piece == BISHOP) getAllBishopMoves(pos, occupied, sameColorPieces, moves);
+    else if (piece == ROOK) getAllRookMoves(pos, occupied, sameColorPieces, moves);
+    else if (piece == QUEEN) getQueenMoves(pos, occupied, sameColorPieces, moves);
 
     for (const Move& m : moves)
     {
@@ -303,10 +307,8 @@ std::vector<Move> Engine::getPieceMoves(int origin)
     return filtered;
 }
 
-void Engine::getAllPawnMoves(int color, const Bitboard& empty, const Bitboard& oppColorPieces, std::vector<Move>& moves)
+void Engine::getAllPawnMoves(Bitboard pawnPositions, int color, const Bitboard& empty, const Bitboard& oppColorPieces, std::vector<Move>& moves)
 {
-    Bitboard pawnPositions = piecePositions[PAWN + 6 * color - 1];
-
     while (pawnPositions != 0)
     {
         const int originIdx = pawnPositions.bitScanForward();
@@ -338,9 +340,8 @@ void Engine::getAllPawnMoves(int color, const Bitboard& empty, const Bitboard& o
     }
 }
 
-void Engine::getAllKnightMoves(int color, const Bitboard& sameColorPieces, std::vector<Move>& moves)
+void Engine::getAllKnightMoves(Bitboard knightPositions, const Bitboard& sameColorPieces, std::vector<Move>& moves)
 {
-    Bitboard knightPositions = piecePositions[KNIGHT + color * 6 - 1];
     
     while (knightPositions != 0)
     {
@@ -357,9 +358,8 @@ void Engine::getAllKnightMoves(int color, const Bitboard& sameColorPieces, std::
     }
 }
 
-void Engine::getKingMoves(int color, const Bitboard& sameColorPieces, std::vector<Move>& moves)
+void Engine::getKingMoves(Bitboard kingPosition, const Bitboard& sameColorPieces, std::vector<Move>& moves)
 {
-    Bitboard kingPosition = piecePositions[KING + 6 * color - 1];
     const int originIdx = kingPosition.bitScanForward();
     const Bitboard& kingAttacks = kingAttackMasks[originIdx];
 
@@ -373,9 +373,8 @@ void Engine::getKingMoves(int color, const Bitboard& sameColorPieces, std::vecto
     }
 }
 
-void Engine::getAllBishopMoves(int color, const Bitboard& blockers, const Bitboard& sameColorPieces, std::vector<Move>& moves)
+void Engine::getAllBishopMoves(Bitboard bishopPositions, const Bitboard& blockers, const Bitboard& sameColorPieces, std::vector<Move>& moves)
 {
-    Bitboard bishopPositions = piecePositions[BISHOP + color * 6 - 1];
 
     while (bishopPositions != 0)
     {
@@ -421,4 +420,58 @@ void Engine::getAllBishopMoves(int color, const Bitboard& blockers, const Bitboa
 
         bishopPositions = bishopPositions.resetLSB();
     }
+}
+
+void Engine::getAllRookMoves(Bitboard rookPositions, const Bitboard& blockers, const Bitboard& sameColorPieces, std::vector<Move>& moves)
+{
+    while (rookPositions != 0)
+    {
+        const int originIdx = rookPositions.bitScanForward();
+        Bitboard targets;
+
+        targets |= rayTable[NORTH][originIdx];
+        if (rayTable[NORTH][originIdx] & blockers)
+        {
+            const int blockerIdx = (rayTable[NORTH][originIdx] & blockers).bitScanForward();
+            targets &= ~rayTable[NORTH][blockerIdx];
+        }
+
+        targets |= rayTable[WEST][originIdx];
+        if (rayTable[WEST][originIdx] & blockers)
+        {
+            const int blockerIdx = (rayTable[WEST][originIdx] & blockers).bitScanForward();
+            targets &= ~rayTable[WEST][blockerIdx];
+        }
+
+        targets |= rayTable[SOUTH][originIdx];
+        if (rayTable[SOUTH][originIdx] & blockers)
+        {
+            const int blockerIdx = (rayTable[SOUTH][originIdx] & blockers).bitScanReverse();
+            targets &= ~rayTable[SOUTH][blockerIdx];
+        }
+
+        targets |= rayTable[EAST][originIdx];
+        if (rayTable[EAST][originIdx] & blockers)
+        {
+            const int blockerIdx = (rayTable[EAST][originIdx] & blockers).bitScanReverse();
+            targets &= ~rayTable[EAST][blockerIdx];
+        }
+
+        targets &= ~sameColorPieces;
+
+        while (targets != 0)
+        {
+            const int targetIndex = targets.bitScanForward();
+            moves.push_back(Move(originIdx, targetIndex));
+            targets = targets.resetLSB();
+        }
+
+        rookPositions = rookPositions.resetLSB();
+    }
+}
+
+void Engine::getQueenMoves(Bitboard queenPosition, const Bitboard& blockers, const Bitboard& sameColorPieces, std::vector<Move>& moves)
+{
+    getAllBishopMoves(queenPosition, blockers, sameColorPieces, moves);
+    getAllRookMoves(queenPosition, blockers, sameColorPieces, moves);
 }
