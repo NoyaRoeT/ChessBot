@@ -280,6 +280,7 @@ std::vector<Move> Engine::getPieceMove(int origin)
     const int piece = originPiece - color * 6;
 
     if (piece == PAWN) return getPawnMove(origin, color);
+    else if (piece == KNIGHT) return getKnightMove(origin, color);
     else return std::vector<Move>();
 }
 
@@ -310,6 +311,28 @@ std::vector<Move> Engine::getPawnMove(int origin, int color)
         targets |= singlePushTargets | doublePushTargets | attacks;
     }
    
+    std::vector<Move> moves;
+    while (targets != 0)
+    {
+        const int targetIndex = targets.bitScanForward();
+        moves.push_back(Move(origin, targetIndex));
+        targets = targets.resetLSB();
+    }
+    return moves;
+}
+
+std::vector<Move> Engine::getKnightMove(int origin, int color)
+{
+    if (board[origin] == 0) return std::vector<Move>();
+
+    Bitboard knightPos;
+    knightPos.setBit(origin, 1);
+
+    const Bitboard& sameColorPieces = getColorPieceOccupancies(color);
+    const Bitboard& knightAttacks = knightAttackMasks[origin];
+
+    Bitboard targets = knightAttacks & ~(sameColorPieces);
+
     std::vector<Move> moves;
     while (targets != 0)
     {

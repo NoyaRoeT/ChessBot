@@ -49,6 +49,10 @@ private:
 
 	// Single Piece Move Generation
 	std::vector<Move> getPawnMove(int origin, int color);
+	std::vector<Move> getKnightMove(int origin, int color);
+
+	// Multi Piece Move Generation
+
 
 	// Preset positions
 	static const std::string startingFen;
