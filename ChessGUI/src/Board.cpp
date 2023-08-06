@@ -45,16 +45,15 @@ void Board::render(sf::RenderWindow& gameWindow, const Engine& engine)
 
 void Board::movePieceManually(const Input& input, Engine& engine)
 {
-    if (input.mousePos.x >= tileSize * 8 || input.mousePos.x < 0) return;
 
-  
     const int boardX = 7 - input.mousePos.x / tileSize;
     const int boardY = 7 - input.mousePos.y / tileSize;
+    if (boardX < 0 || boardX > 7 || boardY < 0 || boardY > 7) return;
 
     if (selectedIndex == -1 && input.isMbPressed(sf::Mouse::Button::Left) && !engine.isSquareEmpty(boardX + boardY * 8))
     {
         selectedIndex = boardX + boardY * 8;
-        selectedPieceMoves = engine.getPieceMove(selectedIndex);
+        selectedPieceMoves = engine.getPieceMoves(selectedIndex);
     }
     else if (selectedIndex != -1 && input.isMbPressed(sf::Mouse::Button::Left))
     {

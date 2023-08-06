@@ -37,12 +37,14 @@ public:
 	Bitboard operator~() const;
 	bool operator==(Bitboard const& rhs) const;
 	bool operator!=(Bitboard const& rhs) const;
+	explicit operator bool() const;
 
 	int64_t get() const;
 	void setBit(int index, int value);
 	void printBoard() const;
 
-	int bitScanForward();
+	int bitScanForward() const;
+	int bitScanReverse() const;
 	Bitboard resetLSB();
 
 	static const Bitboard hFile;

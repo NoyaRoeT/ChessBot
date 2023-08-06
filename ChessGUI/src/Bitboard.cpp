@@ -168,6 +168,11 @@ bool Bitboard::operator!=(Bitboard const& rhs) const
 	return this->bitboard != rhs.bitboard;
 }
 
+Bitboard::operator bool() const
+{
+	return bitboard;
+}
+
 void Bitboard::setBit(int index, int value)
 {
 	int64_t one = 1;
@@ -193,11 +198,24 @@ void Bitboard::printBoard() const
 	}
 }
 
-int Bitboard::bitScanForward()
+int Bitboard::bitScanForward() const
 {
 	// Returns index of LSB
 	if (bitboard == 0) return -1;
 	return Bitboard::debruijnIndex[((bitboard ^ (bitboard - 1)) * Bitboard::debruijn) >> 58];
+}
+
+int Bitboard::bitScanReverse() const
+{
+	if (bitboard == 0) return -1;
+	uint64_t bb = bitboard;
+	bb |= bb >> 1;
+	bb |= bb >> 2;
+	bb |= bb >> 4;
+	bb |= bb >> 8;
+	bb |= bb >> 16;
+	bb |= bb >> 32;
+	return Bitboard::debruijnIndex[(bb * Bitboard::debruijn) >> 58];
 }
 
 Bitboard Bitboard::resetLSB()

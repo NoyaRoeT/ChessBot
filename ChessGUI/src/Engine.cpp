@@ -111,7 +111,7 @@ void Engine::loadFen(const std::string& fen)
     }
 }
 
-Bitboard Engine::getColorPieceOccupancies(int color)
+Bitboard Engine::getOccupancyByColor(int color)
 {
     int start = 0 + color * 6;
     int end = 6 + color * 6;
@@ -273,27 +273,30 @@ void Engine::fillRayTable()
 
 }
 
-std::vector<Move> Engine::getPieceMove(int origin)
+std::vector<Move> Engine::getPieceMoves(int origin)
 {
     const int originPiece = board[origin];
+
+    if (originPiece == 0) return std::vector<Move>();
+
     const int color = (originPiece > 6) ? BLACK : WHITE;
     const int piece = originPiece - color * 6;
 
-    if (piece == PAWN) return getPawnMove(origin, color);
-    else if (piece == KNIGHT) return getKnightMove(origin, color);
+    if (piece == PAWN) return getPawnMoves(origin, color);
+    else if (piece == KNIGHT) return getKnightMoves(origin, color);
+    else if (piece == KING) return getKingMoves(origin, color);
+    else if (piece == BISHOP) return getBishopMoves(origin, color);
     else return std::vector<Move>();
 }
 
-std::vector<Move> Engine::getPawnMove(int origin, int color)
+std::vector<Move> Engine::getPawnMoves(int origin, int color)
 {
-    if (board[origin] == 0) return std::vector<Move>();
-
     Bitboard targets;
     Bitboard pawnPos;
     pawnPos.setBit(origin, 1);
 
     // Get captures
-    const Bitboard oppColorPieces = getColorPieceOccupancies(1 - color);
+    const Bitboard oppColorPieces = getOccupancyByColor(1 - color);
     const Bitboard& attacks = pawnAttackMasks[color][origin] & oppColorPieces;
 
     // Get pushes
@@ -321,17 +324,82 @@ std::vector<Move> Engine::getPawnMove(int origin, int color)
     return moves;
 }
 
-std::vector<Move> Engine::getKnightMove(int origin, int color)
+std::vector<Move> Engine::getKnightMoves(int origin, int color)
 {
-    if (board[origin] == 0) return std::vector<Move>();
-
     Bitboard knightPos;
     knightPos.setBit(origin, 1);
 
-    const Bitboard& sameColorPieces = getColorPieceOccupancies(color);
+    const Bitboard& sameColorPieces = getOccupancyByColor(color);
     const Bitboard& knightAttacks = knightAttackMasks[origin];
 
     Bitboard targets = knightAttacks & ~(sameColorPieces);
+
+    std::vector<Move> moves;
+    while (targets != 0)
+    {
+        const int targetIndex = targets.bitScanForward();
+        moves.push_back(Move(origin, targetIndex));
+        targets = targets.resetLSB();
+    }
+    return moves;
+}
+
+std::vector<Move> Engine::getKingMoves(int origin, int color)
+{
+    Bitboard kingPos;
+    kingPos.setBit(origin, 1);
+
+    const Bitboard& sameColorPieces = getOccupancyByColor(color);
+    const Bitboard& kingAttacks = kingAttackMasks[origin];
+
+    Bitboard targets = kingAttacks & ~(sameColorPieces);
+
+    std::vector<Move> moves;
+    while (targets != 0)
+    {
+        const int targetIndex = targets.bitScanForward();
+        moves.push_back(Move(origin, targetIndex));
+        targets = targets.resetLSB();
+    }
+    return moves;
+}
+
+std::vector<Move> Engine::getBishopMoves(int origin, int color)
+{
+    Bitboard targets;
+
+    const Bitboard& occupied = getOccupiedSquares();
+    const Bitboard& sameColorPieces = getOccupancyByColor(color);
+
+    targets |= rayTable[NORTH_EAST][origin];
+    if (rayTable[NORTH_EAST][origin] & occupied)
+    {
+        const int blockerIdx = (rayTable[NORTH_EAST][origin] & occupied).bitScanForward();
+        targets &= ~rayTable[NORTH_EAST][blockerIdx];
+    }
+
+    targets |= rayTable[NORTH_WEST][origin];
+    if (rayTable[NORTH_WEST][origin] & occupied)
+    {
+        const int blockerIdx = (rayTable[NORTH_WEST][origin] & occupied).bitScanForward();
+        targets &= ~rayTable[NORTH_WEST][blockerIdx];
+    }
+
+    targets |= rayTable[SOUTH_EAST][origin];
+    if (rayTable[SOUTH_EAST][origin] & occupied)
+    {
+        const int blockerIdx = (rayTable[SOUTH_EAST][origin] & occupied).bitScanReverse();
+        targets &= ~rayTable[SOUTH_EAST][blockerIdx];
+    }
+
+    targets |= rayTable[SOUTH_WEST][origin];
+    if (rayTable[SOUTH_WEST][origin] & occupied)
+    {
+        const int blockerIdx = (rayTable[SOUTH_WEST][origin] & occupied).bitScanReverse();
+        targets &= ~rayTable[SOUTH_WEST][blockerIdx];
+    }
+
+    targets &= ~sameColorPieces;
 
     std::vector<Move> moves;
     while (targets != 0)

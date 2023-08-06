@@ -18,11 +18,11 @@ public:
 	int getPieceColor(int index);
 	void loadFen(const std::string& fen);
 
-	Bitboard getColorPieceOccupancies(int color);
+	Bitboard getOccupancyByColor(int color);
 	Bitboard getOccupiedSquares();
 
 	// Single Piece Move Generation (to highlight possible moves for the player)
-	std::vector<Move> getPieceMove(int origin);
+	std::vector<Move> getPieceMoves(int origin);
 
 private:
 	// Board state
@@ -48,8 +48,10 @@ private:
 	void fillRayTable();
 
 	// Single Piece Move Generation
-	std::vector<Move> getPawnMove(int origin, int color);
-	std::vector<Move> getKnightMove(int origin, int color);
+	std::vector<Move> getPawnMoves(int origin, int color);
+	std::vector<Move> getKnightMoves(int origin, int color);
+	std::vector<Move> getKingMoves(int origin, int color);
+	std::vector<Move> getBishopMoves(int origin, int color);
 
 	// Multi Piece Move Generation
 
