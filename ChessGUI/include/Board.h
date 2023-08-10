@@ -19,6 +19,8 @@ public:
 	void render(sf::RenderWindow& gameWindow, const Engine& engine);
 
 private:
+	int playerColor;
+
 	// Manual piece movement
 	int selectedIndex;
 	std::vector<Move> selectedPieceMoves;
@@ -48,4 +50,6 @@ private:
 	void drawPieces(sf::RenderWindow& gameWindow, const Engine& engine);
 	void drawSelectedPieceMoves(sf::RenderWindow& gameWindow);
 
+	// Utility
+	std::vector<int> rotateBoard(const std::vector<int>& board);
 };

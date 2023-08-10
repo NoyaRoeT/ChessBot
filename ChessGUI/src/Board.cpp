@@ -2,13 +2,12 @@
 #include <Input.h>
 #include <sstream>
 #include <iostream>
-#include <Piece.h>
 #include <Engine.h>
 
 
 
 
-Board::Board(const int& width) : selectedIndex(-1), board(64, 0), tileSize(width / 8), lightSquareCol(234, 234, 210), darkSquareCol(75, 114, 153), mostRecentMoveCol(240, 0, 0, 100), selectedOutlineCol(240, 240, 0), selectedMovesOutlineCol(0, 240, 0)
+Board::Board(const int& width) : selectedIndex(-1), board(64, 0), tileSize(width / 8), lightSquareCol(234, 234, 210), darkSquareCol(75, 114, 153), mostRecentMoveCol(240, 0, 0, 100), selectedOutlineCol(240, 240, 0), selectedMovesOutlineCol(0, 240, 0), playerColor(Engine::BLACK)
 {
 	tile = sf::RectangleShape(sf::Vector2f(tileSize, tileSize));
 	piecesTexture.loadFromFile("assets/chess_pieces_sprites.png");
@@ -46,9 +45,15 @@ void Board::render(sf::RenderWindow& gameWindow, const Engine& engine)
 void Board::movePieceManually(const Input& input, Engine& engine)
 {
 
-    const int boardX = 7 - input.mousePos.x / tileSize;
-    const int boardY = 7 - input.mousePos.y / tileSize;
+    int boardX = input.mousePos.x / tileSize;
+    int boardY = input.mousePos.y / tileSize;
     if (boardX < 0 || boardX > 7 || boardY < 0 || boardY > 7) return;
+
+    if (playerColor == Engine::WHITE)
+    {
+        boardX = 7 - boardX;
+        boardY = 7 - boardY;
+    }
 
     if (selectedIndex == -1 && input.isMbPressed(sf::Mouse::Button::Left) && !engine.isSquareEmpty(boardX + boardY * 8))
     {
@@ -59,7 +64,6 @@ void Board::movePieceManually(const Input& input, Engine& engine)
     {
         int targetIndex = boardX + boardY * 8;
         
-
         if (engine.makeMove(selectedIndex, targetIndex))
         {
             // Every time a move is made, set the highlight squares appropriately
@@ -89,9 +93,16 @@ void Board::drawTiles(sf::RenderWindow& gameWindow)
 }
 void Board::drawPieces(sf::RenderWindow& gameWindow, const Engine& engine)
 {
-    // Pieces are drawn from 'top to bottom'.
-    // The piece at index 0 is at the top left of the board.
-    const std::vector<int>& board = engine.getBoard();
+    
+    std::vector<int> board;
+    if (playerColor == Engine::WHITE)
+    {
+        board = engine.getBoard();
+    }
+    else
+    {
+        board = rotateBoard(engine.getBoard());
+    }
 
     for (int i = 0; i != 8; ++i)
     for (int j = 0; j != 8; ++j)
@@ -118,8 +129,9 @@ void Board::drawMostRecentMove(sf::RenderWindow& gameWindow)
 
     for (const int& i : mostRecentMove)
     {
-        int x = 7 - i % 8;
-        int y = 7 - i / 8;
+        const int index = (playerColor == Engine::WHITE) ? 63 - i : i;
+        int x = index % 8;
+        int y = index / 8;
 
         highlight.setPosition(sf::Vector2f(x * tileSize, y * tileSize));
         gameWindow.draw(highlight);
@@ -134,7 +146,8 @@ void Board::drawSelectedOutline(sf::RenderWindow& gameWindow)
         outline.setFillColor(sf::Color::Transparent);
         outline.setOutlineThickness(-5);
         outline.setOutlineColor(selectedOutlineCol);
-        outline.setPosition(sf::Vector2f((7 - selectedIndex % 8) * tileSize, (7 - selectedIndex / 8) * tileSize));
+        const int selected = (playerColor == Engine::WHITE) ? 63 - selectedIndex : selectedIndex;
+        outline.setPosition(sf::Vector2f((selected % 8) * tileSize, (selected / 8) * tileSize));
         gameWindow.draw(outline);
     }
 }
@@ -149,9 +162,23 @@ void Board::drawSelectedPieceMoves(sf::RenderWindow& gameWindow)
         outline.setOutlineColor(selectedMovesOutlineCol);
         for (const Move& m : selectedPieceMoves)
         {
-            outline.setPosition(sf::Vector2f((7 - m.targetIndex % 8) * tileSize, (7 - m.targetIndex / 8) * tileSize));
+            const int targetIndex = (playerColor == Engine::WHITE) ? 63 - m.targetIndex : m.targetIndex;
+            outline.setPosition(sf::Vector2f((targetIndex % 8) * tileSize, (targetIndex / 8 ) * tileSize));
             gameWindow.draw(outline);
         }
     }
+}
+
+std::vector<int> Board::rotateBoard(const std::vector<int>& board)
+{
+    std::vector<int> rotated(64);
+
+    for (int x = 0; x != 8; ++x)
+    for (int y = 0; y != 8; ++y)
+    {
+        rotated[(7-x) + (7-y) * 8] = board[x + y * 8]; 
+    }
+
+    return rotated;
 }
 

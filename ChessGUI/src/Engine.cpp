@@ -1,5 +1,4 @@
 #include "Engine.h"
-#include <Piece.h>
 #include <sstream>
 #include <iostream>
 #include <algorithm>
@@ -9,11 +8,7 @@ const std::string Engine::startingFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQ
 
 Engine::Engine() : board(64, 0)
 {
-    loadFen("4k2r/6r1/8/8/8/8/3R4/R3K3 w Qk - 0 1");
-
-    std::cout << turn << std::endl;
-    for (const auto& b : castlingRights)
-        std::cout << b << std::endl;
+    loadFen(startingFen);
 
     precomputePawnAttacks();
     precomputeKnightAttacks();
@@ -30,6 +25,11 @@ const std::vector<int>& Engine::getBoard() const
 bool Engine::isSquareEmpty(int index)
 {
     return board[index] == 0;
+}
+
+int Engine::getTurn()
+{
+    return turn;
 }
 
 bool Engine::makeMove(const int& origin, const int& target)

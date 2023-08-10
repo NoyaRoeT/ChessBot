@@ -47,9 +47,6 @@
     <ClInclude Include="include\Engine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\Piece.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\Bitboard.h">
       <Filter>Header Files</Filter>
     </ClInclude>
