@@ -36,10 +36,19 @@ bool Engine::isSquareEmpty(int index)
     return board[index] == 0;
 }
 
-void Engine::makeMove(const int& origin, const int& target)
+bool Engine::makeMove(const int& origin, const int& target)
 {
-    // Makes moves without checking legality
+    // Check if valid move
+    std::vector<Move> validMoves = getPieceMoves(origin);
 
+    bool foundMove = false;
+    for (const Move& move : validMoves)
+    {
+        if (move.targetIndex == target) foundMove = true;
+    }
+    if (!foundMove) return false;
+
+    // Update board state
     int originPiece = board[origin];
     int targetPiece = board[target];
     board[target] = originPiece;
@@ -48,6 +57,8 @@ void Engine::makeMove(const int& origin, const int& target)
     if (targetPiece != 0) piecePositions[targetPiece - 1].setBit(target, 0);
     piecePositions[originPiece - 1].setBit(origin, 0);
     piecePositions[originPiece - 1].setBit(target, 1);
+
+    return true;
 
 }
 
@@ -63,6 +74,8 @@ void Engine::loadFen(const std::string& fen)
 
     // Read piece placement string
     std::string piecePlacementStr;
+    std::string turnStr;
+    std::string castlingStr;
     fenStream >> piecePlacementStr;
 
     int x = 7, y = 7;
@@ -110,6 +123,10 @@ void Engine::loadFen(const std::string& fen)
             --x;
         }
     }
+
+    fenStream >> turnStr;
+    if (turnStr == "w") turn = WHITE;
+    else turn = BLACK;
 }
 
 Bitboard Engine::getOccupancyByColor(int color)
@@ -292,11 +309,11 @@ std::vector<Move> Engine::getPieceMoves(int origin)
     std::vector<Move> moves;
     std::vector<Move> filtered;
 
-    if (piece == PAWN) getAllPawnMoves(pos, color, empty, oppColorPieces, moves);
-    else if (piece == KNIGHT) getAllKnightMoves(pos, sameColorPieces, moves);
+    if (piece == PAWN) getPawnMoves(pos, color, empty, oppColorPieces, moves);
+    else if (piece == KNIGHT) getKnightMoves(pos, sameColorPieces, moves);
     else if (piece == KING) getKingMoves(pos, sameColorPieces, moves);
-    else if (piece == BISHOP) getAllBishopMoves(pos, occupied, sameColorPieces, moves);
-    else if (piece == ROOK) getAllRookMoves(pos, occupied, sameColorPieces, moves);
+    else if (piece == BISHOP) getBishopMoves(pos, occupied, sameColorPieces, moves);
+    else if (piece == ROOK) getRookMoves(pos, occupied, sameColorPieces, moves);
     else if (piece == QUEEN) getQueenMoves(pos, occupied, sameColorPieces, moves);
 
     for (const Move& m : moves)
@@ -307,7 +324,7 @@ std::vector<Move> Engine::getPieceMoves(int origin)
     return filtered;
 }
 
-void Engine::getAllPawnMoves(Bitboard pawnPositions, int color, const Bitboard& empty, const Bitboard& oppColorPieces, std::vector<Move>& moves)
+void Engine::getPawnMoves(Bitboard pawnPositions, int color, const Bitboard& empty, const Bitboard& oppColorPieces, std::vector<Move>& moves)
 {
     while (pawnPositions != 0)
     {
@@ -340,7 +357,7 @@ void Engine::getAllPawnMoves(Bitboard pawnPositions, int color, const Bitboard& 
     }
 }
 
-void Engine::getAllKnightMoves(Bitboard knightPositions, const Bitboard& sameColorPieces, std::vector<Move>& moves)
+void Engine::getKnightMoves(Bitboard knightPositions, const Bitboard& sameColorPieces, std::vector<Move>& moves)
 {
     
     while (knightPositions != 0)
@@ -373,7 +390,7 @@ void Engine::getKingMoves(Bitboard kingPosition, const Bitboard& sameColorPieces
     }
 }
 
-void Engine::getAllBishopMoves(Bitboard bishopPositions, const Bitboard& blockers, const Bitboard& sameColorPieces, std::vector<Move>& moves)
+void Engine::getBishopMoves(Bitboard bishopPositions, const Bitboard& blockers, const Bitboard& sameColorPieces, std::vector<Move>& moves)
 {
 
     while (bishopPositions != 0)
@@ -422,7 +439,7 @@ void Engine::getAllBishopMoves(Bitboard bishopPositions, const Bitboard& blocker
     }
 }
 
-void Engine::getAllRookMoves(Bitboard rookPositions, const Bitboard& blockers, const Bitboard& sameColorPieces, std::vector<Move>& moves)
+void Engine::getRookMoves(Bitboard rookPositions, const Bitboard& blockers, const Bitboard& sameColorPieces, std::vector<Move>& moves)
 {
     while (rookPositions != 0)
     {
@@ -472,6 +489,6 @@ void Engine::getAllRookMoves(Bitboard rookPositions, const Bitboard& blockers, c
 
 void Engine::getQueenMoves(Bitboard queenPosition, const Bitboard& blockers, const Bitboard& sameColorPieces, std::vector<Move>& moves)
 {
-    getAllBishopMoves(queenPosition, blockers, sameColorPieces, moves);
-    getAllRookMoves(queenPosition, blockers, sameColorPieces, moves);
+    getBishopMoves(queenPosition, blockers, sameColorPieces, moves);
+    getRookMoves(queenPosition, blockers, sameColorPieces, moves);
 }

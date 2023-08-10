@@ -12,7 +12,7 @@ public:
 
 	const std::vector<int>& getBoard() const;
 
-	void makeMove(const int& origin, const int& target);
+	bool makeMove(const int& origin, const int& target);
 	
 	bool isSquareEmpty(int index);
 	int getPieceColor(int index);
@@ -28,12 +28,13 @@ private:
 	// Board state
 	std::vector<int> board;
 	std::vector<Bitboard> piecePositions;
+	std::vector<bool> castlingRights; // {WQ, WK, BQ, BK}
+	int turn;
 
 	// Attack tables
 	std::vector<std::vector<Bitboard>> pawnAttackMasks;
 	std::vector<Bitboard> knightAttackMasks;
 	std::vector<Bitboard> kingAttackMasks;
-
 	std::vector<std::vector<Bitboard>> rayTable;
 
 	// Precomputation
@@ -48,11 +49,11 @@ private:
 	void fillRayTable();
 
 	// Piece Move Generation
-	void getAllPawnMoves(Bitboard pawnPositions, int color, const Bitboard& empty, const Bitboard& oppColorPieces, std::vector<Move>& moves);
-	void getAllKnightMoves(Bitboard knightPositions, const Bitboard& sameColorPieces, std::vector<Move>& moves);
+	void getPawnMoves(Bitboard pawnPositions, int color, const Bitboard& empty, const Bitboard& oppColorPieces, std::vector<Move>& moves);
+	void getKnightMoves(Bitboard knightPositions, const Bitboard& sameColorPieces, std::vector<Move>& moves);
 	void getKingMoves(Bitboard kingPosition, const Bitboard& sameColorPieces, std::vector<Move>& moves);
-	void getAllBishopMoves(Bitboard bishopPositions, const Bitboard& blockers, const Bitboard& sameColorPieces, std::vector<Move>& moves);
-	void getAllRookMoves(Bitboard rookPositions, const Bitboard& blockers, const Bitboard& sameColorPieces, std::vector<Move>& moves);
+	void getBishopMoves(Bitboard bishopPositions, const Bitboard& blockers, const Bitboard& sameColorPieces, std::vector<Move>& moves);
+	void getRookMoves(Bitboard rookPositions, const Bitboard& blockers, const Bitboard& sameColorPieces, std::vector<Move>& moves);
 	void getQueenMoves(Bitboard queenPosition, const Bitboard& blockers, const Bitboard& sameColorPieces, std::vector<Move>& moves);
 
 
