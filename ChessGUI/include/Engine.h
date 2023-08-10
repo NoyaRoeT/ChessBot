@@ -88,5 +88,6 @@ private:
 	// Utility
 	Bitboard getOccupancyByColor(int color);
 	Bitboard getOccupiedSquares();
+	Bitboard getBitboardFromAlg(const std::string&);
 	
 };

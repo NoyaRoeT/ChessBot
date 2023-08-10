@@ -8,8 +8,9 @@ const std::string Engine::startingFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQ
 
 Engine::Engine() : board(64, 0)
 {
-    loadFen(startingFen);
+    loadFen("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1");
 
+    enPassantTarget.printBoard();
     precomputePawnAttacks();
     precomputeKnightAttacks();
     precomputeKingAttacks();
@@ -72,6 +73,7 @@ void Engine::loadFen(const std::string& fen)
     std::string piecePlacementStr;
     std::string turnStr;
     std::string castlingStr;
+    std::string enPassantStr;;
     fenStream >> piecePlacementStr;
 
     int x = 7, y = 7;
@@ -134,6 +136,12 @@ void Engine::loadFen(const std::string& fen)
         else if (c == 'q') castlingRights[2] = true;
         else if (c == 'k') castlingRights[3] = true;
     }
+
+    fenStream >> enPassantStr;
+    if (enPassantStr != "-")
+    {
+        enPassantTarget = getBitboardFromAlg(enPassantStr);
+    }
 }
 
 Bitboard Engine::getOccupancyByColor(int color)
@@ -156,6 +164,46 @@ Bitboard Engine::getOccupiedSquares()
     Bitboard result;
     for (const auto& i : piecePositions) result |= i;
     return result;
+}
+
+Bitboard Engine::getBitboardFromAlg(const std::string& a)
+{
+    const char letter = a[0];
+    const char number = a[1];
+
+    int x, y = number - 1;
+
+    switch (letter)
+    {
+    case 'a':
+        x = 7;
+        break;
+    case 'b':
+        x = 6;
+        break;
+    case 'c':
+        x = 5;
+        break;
+    case 'd':
+        x = 4;
+        break;
+    case 'e':
+        x = 3;
+        break;
+    case 'f':
+        x = 2;
+        break;
+    case 'g':
+        x = 1;
+        break;
+    case 'h':
+        x = 0;
+        break;
+    }
+
+    Bitboard res;
+    res.setBit(x + y * 8, 1);
+    return res;
 }
 
 Bitboard Engine::genPawnAttackMask(int color, int index)

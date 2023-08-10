@@ -7,7 +7,7 @@
 
 
 
-Board::Board(const int& width) : selectedIndex(-1), board(64, 0), tileSize(width / 8), lightSquareCol(234, 234, 210), darkSquareCol(75, 114, 153), mostRecentMoveCol(240, 0, 0, 100), selectedOutlineCol(240, 240, 0), selectedMovesOutlineCol(0, 240, 0), playerColor(Engine::BLACK)
+Board::Board(const int& width) : selectedIndex(-1), board(64, 0), tileSize(width / 8), lightSquareCol(234, 234, 210), darkSquareCol(75, 114, 153), mostRecentMoveCol(240, 0, 0, 100), selectedOutlineCol(240, 240, 0), selectedMovesOutlineCol(0, 240, 0), playerColor(Engine::WHITE)
 {
 	tile = sf::RectangleShape(sf::Vector2f(tileSize, tileSize));
 	piecesTexture.loadFromFile("assets/chess_pieces_sprites.png");
