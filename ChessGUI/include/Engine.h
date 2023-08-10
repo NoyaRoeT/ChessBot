@@ -13,13 +13,9 @@ public:
 	const std::vector<int>& getBoard() const;
 
 	bool makeMove(const int& origin, const int& target);
-	
 	bool isSquareEmpty(int index);
-	int getPieceColor(int index);
-	void loadFen(const std::string& fen);
 
-	Bitboard getOccupancyByColor(int color);
-	Bitboard getOccupiedSquares();
+	void loadFen(const std::string& fen);
 
 	// Single Piece Move Generation (to highlight possible moves for the player)
 	std::vector<Move> getPieceMoves(int origin);
@@ -29,6 +25,7 @@ private:
 	std::vector<int> board;
 	std::vector<Bitboard> piecePositions;
 	std::vector<bool> castlingRights; // {WQ, WK, BQ, BK}
+	Bitboard enPassantTarget;
 	int turn;
 
 	// Attack tables
@@ -36,6 +33,10 @@ private:
 	std::vector<Bitboard> knightAttackMasks;
 	std::vector<Bitboard> kingAttackMasks;
 	std::vector<std::vector<Bitboard>> rayTable;
+
+	// Utility
+	Bitboard getOccupancyByColor(int color);
+	Bitboard getOccupiedSquares();
 
 	// Precomputation
 	Bitboard genPawnAttackMask(int color, int index);

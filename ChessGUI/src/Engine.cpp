@@ -9,7 +9,11 @@ const std::string Engine::startingFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQ
 
 Engine::Engine() : board(64, 0)
 {
-    loadFen(startingFen);
+    loadFen("4k2r/6r1/8/8/8/8/3R4/R3K3 w Qk - 0 1");
+
+    std::cout << turn << std::endl;
+    for (const auto& b : castlingRights)
+        std::cout << b << std::endl;
 
     precomputePawnAttacks();
     precomputeKnightAttacks();
@@ -21,14 +25,6 @@ Engine::Engine() : board(64, 0)
 const std::vector<int>& Engine::getBoard() const
 {
     return board;
-}
-
-int Engine::getPieceColor(int index)
-{
-    int targetPiece = board[index];
-    if (targetPiece == 0) return -1;
-    else if (targetPiece < 7) return 0;
-    else return 1;
 }
 
 bool Engine::isSquareEmpty(int index)
@@ -127,6 +123,17 @@ void Engine::loadFen(const std::string& fen)
     fenStream >> turnStr;
     if (turnStr == "w") turn = WHITE;
     else turn = BLACK;
+
+    fenStream >> castlingStr;
+    castlingRights = { false, false, false, false };
+    for (const char& c : castlingStr)
+    {
+        if (c == '-') break;
+        else if (c == 'Q') castlingRights[0] = true;
+        else if (c == 'K') castlingRights[1] = true;
+        else if (c == 'q') castlingRights[2] = true;
+        else if (c == 'k') castlingRights[3] = true;
+    }
 }
 
 Bitboard Engine::getOccupancyByColor(int color)

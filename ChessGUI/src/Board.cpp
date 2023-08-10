@@ -58,20 +58,18 @@ void Board::movePieceManually(const Input& input, Engine& engine)
     else if (selectedIndex != -1 && input.isMbPressed(sf::Mouse::Button::Left))
     {
         int targetIndex = boardX + boardY * 8;
-        if (engine.isSquareEmpty(targetIndex) || engine.getPieceColor(targetIndex) != engine.getPieceColor(selectedIndex))
+        
+
+        if (engine.makeMove(selectedIndex, targetIndex))
         {
+            // Every time a move is made, set the highlight squares appropriately
+            mostRecentMove.clear();
+            mostRecentMove.push_back(selectedIndex);
+            mostRecentMove.push_back(targetIndex);
+         };
 
-            if (engine.makeMove(selectedIndex, targetIndex))
-            {
-                // Every time a move is made, set the highlight squares appropriately
-                mostRecentMove.clear();
-                mostRecentMove.push_back(selectedIndex);
-                mostRecentMove.push_back(targetIndex);
-            };
-
-            // Clear possible moves for selected piece
-            selectedPieceMoves.clear();
-        }
+        // Clear possible moves for selected piece
+        selectedPieceMoves.clear();
         selectedIndex = -1;
     }
 }
