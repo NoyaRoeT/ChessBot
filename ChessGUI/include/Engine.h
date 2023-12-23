@@ -86,13 +86,19 @@ private:
 	void getRookMoves(Bitboard rookPositions, const Bitboard& blockers, const Bitboard& sameColorPieces, std::vector<Move>& moves);
 	void getQueenMoves(Bitboard queenPosition, const Bitboard& blockers, const Bitboard& sameColorPieces, std::vector<Move>& moves);
 
+	// Generates the Bitboard of moves for all pieces of the same type (pseudo-legal)
+	Bitboard genPawnsMoveMask(int color, Bitboard pawnPositions, const Bitboard& empty, const Bitboard& oppColorPieces);
+	Bitboard genKnightsMoveMask(Bitboard knightPositions, const Bitboard& sameColorPieces);
+	Bitboard genBishopsMoveMask(Bitboard bishopPositions, const Bitboard& blockers, const Bitboard& sameColorPieces);
+	Bitboard genRooksMoveMask(Bitboard rookPositions, const Bitboard& blockers, const Bitboard& sameColorPieces);
+
 	// Generates the Bitboard of moves for a single piece (pseudo-legal)
 	Bitboard genPawnMoveMask(int originIdx, int color, Bitboard currPawn, const Bitboard& empty, const Bitboard& oppColorPieces);
 	Bitboard genKnightMoveMask(int originIdx, const Bitboard& sameColorPieces);
-	Bitboard genKingMoveMask(int originIdx, const Bitboard& sameColorPieces);
+	Bitboard genKingMoveMask(Bitboard kingPosition, const Bitboard& sameColorPieces);
 	Bitboard genBishopMoveMask(int originIdx, const Bitboard& blockers, const Bitboard& sameColorPieces);
 	Bitboard genRookMoveMask(int originIdx, const Bitboard& blockers, const Bitboard& sameColorPieces);
-	Bitboard genQueenMoveMask(int originIdx, const Bitboard& blockers, const Bitboard& sameColorPieces);
+	Bitboard genQueenMoveMask(Bitboard queenPosition, const Bitboard& blockers, const Bitboard& sameColorPieces);
 
 	bool isInCheck(int color);
 

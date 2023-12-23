@@ -54,6 +54,10 @@ bool Engine::makeMove(const int& origin, const int& target)
     piecePositions[originPiece - 1].setBit(origin, 0);
     piecePositions[originPiece - 1].setBit(target, 1);
 
+    bool isWhiteInCheck = isInCheck(WHITE);
+    bool isBlackInCheck = isInCheck(BLACK);
+
+    std::cout << "White: " << isWhiteInCheck << " Black: " << isBlackInCheck << std::endl;
     return true;
 
 }
@@ -418,7 +422,7 @@ void Engine::getKnightMoves(Bitboard knightPositions, const Bitboard& sameColorP
 void Engine::getKingMoves(Bitboard kingPosition, const Bitboard& sameColorPieces, std::vector<Move>& moves)
 {
     const int originIdx = kingPosition.bitScanForward();
-    Bitboard targets = genKingMoveMask(originIdx, sameColorPieces);
+    Bitboard targets = genKingMoveMask(kingPosition, sameColorPieces);
 
     while (targets != 0)
     {
@@ -471,6 +475,67 @@ void Engine::getQueenMoves(Bitboard queenPosition, const Bitboard& blockers, con
     getRookMoves(queenPosition, blockers, sameColorPieces, moves);
 }
 
+Bitboard Engine::genPawnsMoveMask(int color, Bitboard pawnPositions, const Bitboard& empty, const Bitboard& oppColorPieces)
+{
+    Bitboard result;
+    while (pawnPositions != 0)
+    {
+        const int originIdx = pawnPositions.bitScanForward();
+        Bitboard currPawn = pawnPositions.isolateLSB();
+        Bitboard targets = genPawnMoveMask(originIdx, color, currPawn, empty, oppColorPieces);
+        result |= targets;
+
+        pawnPositions = pawnPositions.resetLSB();
+    }
+    return result;
+}
+
+Bitboard Engine::genKnightsMoveMask(Bitboard knightPositions, const Bitboard& sameColorPieces)
+{
+    Bitboard result;
+    while (knightPositions != 0)
+    {
+        const int originIdx = knightPositions.bitScanForward();
+        Bitboard targets = genKnightMoveMask(originIdx, sameColorPieces);
+        result |= targets;
+        
+        knightPositions = knightPositions.resetLSB();
+    }
+
+    return result;
+}
+
+Bitboard Engine::genBishopsMoveMask(Bitboard bishopPositions, const Bitboard& blockers, const Bitboard& sameColorPieces)
+{
+    Bitboard result;
+    while (bishopPositions != 0)
+    {
+        const int originIdx = bishopPositions.bitScanForward();
+        Bitboard targets = genBishopMoveMask(originIdx, blockers, sameColorPieces);
+
+        result |= targets;
+
+        bishopPositions = bishopPositions.resetLSB();
+    }
+    return result;
+}
+
+Bitboard Engine::genRooksMoveMask(Bitboard rookPositions, const Bitboard& blockers, const Bitboard& sameColorPieces)
+{
+    Bitboard result;
+    while (rookPositions != 0)
+    {
+        const int originIdx = rookPositions.bitScanForward();
+        Bitboard targets = genRookMoveMask(originIdx, blockers, sameColorPieces);
+
+        result |= targets;
+
+        rookPositions = rookPositions.resetLSB();
+    }
+
+    return result;
+}
+
 Bitboard Engine::genPawnMoveMask(int originIdx, int color, Bitboard currPawn, const Bitboard& empty, const Bitboard& oppColorPieces)
 {
     Bitboard targets = pawnAttackMasks[color][originIdx] & oppColorPieces;
@@ -496,8 +561,9 @@ Bitboard Engine::genKnightMoveMask(int originIdx, const Bitboard& sameColorPiece
     return knightAttackMasks[originIdx] & ~sameColorPieces;
 }
 
-Bitboard Engine::genKingMoveMask(int originIdx, const Bitboard& sameColorPieces)
+Bitboard Engine::genKingMoveMask(Bitboard kingPosition, const Bitboard& sameColorPieces)
 {
+    const int originIdx = kingPosition.bitScanForward();
     const Bitboard& kingAttacks = kingAttackMasks[originIdx];
     Bitboard targets = kingAttacks & ~(sameColorPieces);
 
@@ -578,13 +644,45 @@ Bitboard Engine::genRookMoveMask(int originIdx, const Bitboard& blockers, const 
     return targets;
 }
 
-Bitboard Engine::genQueenMoveMask(int originIdx, const Bitboard& blockers, const Bitboard& sameColorPieces)
+Bitboard Engine::genQueenMoveMask(Bitboard queenPosition, const Bitboard& blockers, const Bitboard& sameColorPieces)
 {
+    const int originIdx = queenPosition.bitScanForward();
     return genBishopMoveMask(originIdx, blockers, sameColorPieces) | genRookMoveMask(originIdx, blockers, sameColorPieces);
 }
 
 bool Engine::isInCheck(int color)
 {
-    // Generate attack mask
-    return false;
+    
+    // Generate attack mask of opposite color (should refactor into a function)
+    const int oppColor = color == WHITE ? BLACK : WHITE;
+    const int offset = oppColor * 6;
+    const Bitboard& occupied = getOccupiedSquares();
+    const Bitboard& oppPos = getOccupancyByColor(oppColor);
+    const Bitboard& oppKingPos = piecePositions[offset + KING - 1];
+    const Bitboard& oppQueenPos = piecePositions[offset + QUEEN - 1];
+    const Bitboard& oppBishopPos = piecePositions[offset + BISHOP - 1];
+    const Bitboard& oppKnightPos = piecePositions[offset + KNIGHT - 1];
+    const Bitboard& oppRookPos = piecePositions[offset + ROOK - 1];
+    Bitboard oppPawnPos = piecePositions[offset + PAWN - 1];
+
+    Bitboard attacked;
+    attacked |= genKingMoveMask(oppKingPos, oppPos);
+    attacked |= genQueenMoveMask(oppQueenPos, occupied, oppPos);
+    attacked |= genBishopsMoveMask(oppBishopPos, occupied, oppPos);
+    attacked |= genKnightsMoveMask(oppKnightPos, oppPos);
+    attacked |= genRooksMoveMask(oppRookPos, occupied, oppPos);
+
+    while (oppPawnPos != 0)
+    {
+        const int originIdx = oppPawnPos.bitScanForward();
+        Bitboard currPawn = oppPawnPos.isolateLSB();   
+        attacked |= pawnAttackMasks[oppColor][originIdx];
+        oppPawnPos = oppPawnPos.resetLSB();
+    }
+
+    // Check if king is in attacked squares
+    const Bitboard& kingPos = piecePositions[color == WHITE ? 0 : 6];
+
+
+    return (kingPos & attacked) != 0;
 }
