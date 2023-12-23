@@ -580,5 +580,11 @@ Bitboard Engine::genRookMoveMask(int originIdx, const Bitboard& blockers, const 
 
 Bitboard Engine::genQueenMoveMask(int originIdx, const Bitboard& blockers, const Bitboard& sameColorPieces)
 {
-    return Bitboard();
+    return genBishopMoveMask(originIdx, blockers, sameColorPieces) | genRookMoveMask(originIdx, blockers, sameColorPieces);
+}
+
+bool Engine::isInCheck(int color)
+{
+    // Generate attack mask
+    return false;
 }

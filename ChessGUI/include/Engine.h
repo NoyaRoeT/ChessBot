@@ -94,6 +94,7 @@ private:
 	Bitboard genRookMoveMask(int originIdx, const Bitboard& blockers, const Bitboard& sameColorPieces);
 	Bitboard genQueenMoveMask(int originIdx, const Bitboard& blockers, const Bitboard& sameColorPieces);
 
+	bool isInCheck(int color);
 
 	// Utility
 	Bitboard getOccupancyByColor(int color);
