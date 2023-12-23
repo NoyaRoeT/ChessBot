@@ -8,9 +8,8 @@ const std::string Engine::startingFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQ
 
 Engine::Engine() : board(64, 0)
 {
-    loadFen("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1");
+    loadFen(startingFen);
 
-    enPassantTarget.printBoard();
     precomputePawnAttacks();
     precomputeKnightAttacks();
     precomputeKingAttacks();
@@ -385,21 +384,7 @@ void Engine::getPawnMoves(Bitboard pawnPositions, int color, const Bitboard& emp
     {
         const int originIdx = pawnPositions.bitScanForward();
         Bitboard currPawn = pawnPositions.isolateLSB();
-        Bitboard targets = pawnAttackMasks[color][originIdx] & oppColorPieces;
-
-        if (color == 0)
-        {
-            const Bitboard& singlePushTargets = (currPawn << VERTICAL) & empty;
-            const Bitboard& doublePushTargets = (singlePushTargets << VERTICAL) & empty & Bitboard::rank4;
-            targets |= singlePushTargets | doublePushTargets;
-        }
-        else
-        {
-            const Bitboard& singlePushTargets = (currPawn >> VERTICAL) & empty;
-            const Bitboard& doublePushTargets = (singlePushTargets >> VERTICAL) & empty & Bitboard::rank5;
-            targets |= singlePushTargets | doublePushTargets;
-        }
-
+        Bitboard targets = genPawnMoveMask(originIdx, color, currPawn, empty, oppColorPieces);
 
         while (targets != 0)
         {
@@ -418,7 +403,7 @@ void Engine::getKnightMoves(Bitboard knightPositions, const Bitboard& sameColorP
     while (knightPositions != 0)
     {
         const int originIdx = knightPositions.bitScanForward();
-        Bitboard targets = knightAttackMasks[originIdx] & ~sameColorPieces;
+        Bitboard targets = genKnightMoveMask(originIdx, sameColorPieces);
 
         while (targets != 0)
         {
@@ -433,9 +418,7 @@ void Engine::getKnightMoves(Bitboard knightPositions, const Bitboard& sameColorP
 void Engine::getKingMoves(Bitboard kingPosition, const Bitboard& sameColorPieces, std::vector<Move>& moves)
 {
     const int originIdx = kingPosition.bitScanForward();
-    const Bitboard& kingAttacks = kingAttackMasks[originIdx];
-
-    Bitboard targets = kingAttacks & ~(sameColorPieces);
+    Bitboard targets = genKingMoveMask(originIdx, sameColorPieces);
 
     while (targets != 0)
     {
@@ -451,37 +434,7 @@ void Engine::getBishopMoves(Bitboard bishopPositions, const Bitboard& blockers, 
     while (bishopPositions != 0)
     {
         const int originIdx = bishopPositions.bitScanForward();
-        Bitboard targets;
-
-        targets |= rayTable[NORTH_EAST][originIdx];
-        if (rayTable[NORTH_EAST][originIdx] & blockers)
-        {
-            const int blockerIdx = (rayTable[NORTH_EAST][originIdx] & blockers).bitScanForward();
-            targets &= ~rayTable[NORTH_EAST][blockerIdx];
-        }
-
-        targets |= rayTable[NORTH_WEST][originIdx];
-        if (rayTable[NORTH_WEST][originIdx] & blockers)
-        {
-            const int blockerIdx = (rayTable[NORTH_WEST][originIdx] & blockers).bitScanForward();
-            targets &= ~rayTable[NORTH_WEST][blockerIdx];
-        }
-
-        targets |= rayTable[SOUTH_EAST][originIdx];
-        if (rayTable[SOUTH_EAST][originIdx] & blockers)
-        {
-            const int blockerIdx = (rayTable[SOUTH_EAST][originIdx] & blockers).bitScanReverse();
-            targets &= ~rayTable[SOUTH_EAST][blockerIdx];
-        }
-
-        targets |= rayTable[SOUTH_WEST][originIdx];
-        if (rayTable[SOUTH_WEST][originIdx] & blockers)
-        {
-            const int blockerIdx = (rayTable[SOUTH_WEST][originIdx] & blockers).bitScanReverse();
-            targets &= ~rayTable[SOUTH_WEST][blockerIdx];
-        }
-
-        targets &= ~sameColorPieces;
+        Bitboard targets = genBishopMoveMask(originIdx, blockers, sameColorPieces);
 
         while (targets != 0)
         {
@@ -499,37 +452,7 @@ void Engine::getRookMoves(Bitboard rookPositions, const Bitboard& blockers, cons
     while (rookPositions != 0)
     {
         const int originIdx = rookPositions.bitScanForward();
-        Bitboard targets;
-
-        targets |= rayTable[NORTH][originIdx];
-        if (rayTable[NORTH][originIdx] & blockers)
-        {
-            const int blockerIdx = (rayTable[NORTH][originIdx] & blockers).bitScanForward();
-            targets &= ~rayTable[NORTH][blockerIdx];
-        }
-
-        targets |= rayTable[WEST][originIdx];
-        if (rayTable[WEST][originIdx] & blockers)
-        {
-            const int blockerIdx = (rayTable[WEST][originIdx] & blockers).bitScanForward();
-            targets &= ~rayTable[WEST][blockerIdx];
-        }
-
-        targets |= rayTable[SOUTH][originIdx];
-        if (rayTable[SOUTH][originIdx] & blockers)
-        {
-            const int blockerIdx = (rayTable[SOUTH][originIdx] & blockers).bitScanReverse();
-            targets &= ~rayTable[SOUTH][blockerIdx];
-        }
-
-        targets |= rayTable[EAST][originIdx];
-        if (rayTable[EAST][originIdx] & blockers)
-        {
-            const int blockerIdx = (rayTable[EAST][originIdx] & blockers).bitScanReverse();
-            targets &= ~rayTable[EAST][blockerIdx];
-        }
-
-        targets &= ~sameColorPieces;
+        Bitboard targets = genRookMoveMask(originIdx, blockers, sameColorPieces);
 
         while (targets != 0)
         {
@@ -546,4 +469,116 @@ void Engine::getQueenMoves(Bitboard queenPosition, const Bitboard& blockers, con
 {
     getBishopMoves(queenPosition, blockers, sameColorPieces, moves);
     getRookMoves(queenPosition, blockers, sameColorPieces, moves);
+}
+
+Bitboard Engine::genPawnMoveMask(int originIdx, int color, Bitboard currPawn, const Bitboard& empty, const Bitboard& oppColorPieces)
+{
+    Bitboard targets = pawnAttackMasks[color][originIdx] & oppColorPieces;
+
+    if (color == 0)
+    {
+        const Bitboard& singlePushTargets = (currPawn << VERTICAL) & empty;
+        const Bitboard& doublePushTargets = (singlePushTargets << VERTICAL) & empty & Bitboard::rank4;
+        targets |= singlePushTargets | doublePushTargets;
+    }
+    else
+    {
+        const Bitboard& singlePushTargets = (currPawn >> VERTICAL) & empty;
+        const Bitboard& doublePushTargets = (singlePushTargets >> VERTICAL) & empty & Bitboard::rank5;
+        targets |= singlePushTargets | doublePushTargets;
+    }
+
+    return targets;
+}
+
+Bitboard Engine::genKnightMoveMask(int originIdx, const Bitboard& sameColorPieces)
+{
+    return knightAttackMasks[originIdx] & ~sameColorPieces;
+}
+
+Bitboard Engine::genKingMoveMask(int originIdx, const Bitboard& sameColorPieces)
+{
+    const Bitboard& kingAttacks = kingAttackMasks[originIdx];
+    Bitboard targets = kingAttacks & ~(sameColorPieces);
+
+    return targets;
+}
+
+Bitboard Engine::genBishopMoveMask(int originIdx, const Bitboard& blockers, const Bitboard& sameColorPieces)
+{
+    Bitboard targets;
+
+    targets |= rayTable[NORTH_EAST][originIdx];
+    if (rayTable[NORTH_EAST][originIdx] & blockers)
+    {
+        const int blockerIdx = (rayTable[NORTH_EAST][originIdx] & blockers).bitScanForward();
+        targets &= ~rayTable[NORTH_EAST][blockerIdx];
+    }
+
+    targets |= rayTable[NORTH_WEST][originIdx];
+    if (rayTable[NORTH_WEST][originIdx] & blockers)
+    {
+        const int blockerIdx = (rayTable[NORTH_WEST][originIdx] & blockers).bitScanForward();
+        targets &= ~rayTable[NORTH_WEST][blockerIdx];
+    }
+
+    targets |= rayTable[SOUTH_EAST][originIdx];
+    if (rayTable[SOUTH_EAST][originIdx] & blockers)
+    {
+        const int blockerIdx = (rayTable[SOUTH_EAST][originIdx] & blockers).bitScanReverse();
+        targets &= ~rayTable[SOUTH_EAST][blockerIdx];
+    }
+
+    targets |= rayTable[SOUTH_WEST][originIdx];
+    if (rayTable[SOUTH_WEST][originIdx] & blockers)
+    {
+        const int blockerIdx = (rayTable[SOUTH_WEST][originIdx] & blockers).bitScanReverse();
+        targets &= ~rayTable[SOUTH_WEST][blockerIdx];
+    }
+
+    targets &= ~sameColorPieces;
+
+    return targets;
+}
+
+Bitboard Engine::genRookMoveMask(int originIdx, const Bitboard& blockers, const Bitboard& sameColorPieces)
+{
+    Bitboard targets;
+
+    targets |= rayTable[NORTH][originIdx];
+    if (rayTable[NORTH][originIdx] & blockers)
+    {
+        const int blockerIdx = (rayTable[NORTH][originIdx] & blockers).bitScanForward();
+        targets &= ~rayTable[NORTH][blockerIdx];
+    }
+
+    targets |= rayTable[WEST][originIdx];
+    if (rayTable[WEST][originIdx] & blockers)
+    {
+        const int blockerIdx = (rayTable[WEST][originIdx] & blockers).bitScanForward();
+        targets &= ~rayTable[WEST][blockerIdx];
+    }
+
+    targets |= rayTable[SOUTH][originIdx];
+    if (rayTable[SOUTH][originIdx] & blockers)
+    {
+        const int blockerIdx = (rayTable[SOUTH][originIdx] & blockers).bitScanReverse();
+        targets &= ~rayTable[SOUTH][blockerIdx];
+    }
+
+    targets |= rayTable[EAST][originIdx];
+    if (rayTable[EAST][originIdx] & blockers)
+    {
+        const int blockerIdx = (rayTable[EAST][originIdx] & blockers).bitScanReverse();
+        targets &= ~rayTable[EAST][blockerIdx];
+    }
+
+    targets &= ~sameColorPieces;
+
+    return targets;
+}
+
+Bitboard Engine::genQueenMoveMask(int originIdx, const Bitboard& blockers, const Bitboard& sameColorPieces)
+{
+    return Bitboard();
 }

@@ -77,13 +77,23 @@ private:
 	Bitboard genRay(int index, int dir);
 	void fillRayTable();
 
-	// Piece Move Generation
+	// Move Generation
+	// Generates all Moves for a type of piece (pseudo-legal)
 	void getPawnMoves(Bitboard pawnPositions, int color, const Bitboard& empty, const Bitboard& oppColorPieces, std::vector<Move>& moves);
 	void getKnightMoves(Bitboard knightPositions, const Bitboard& sameColorPieces, std::vector<Move>& moves);
 	void getKingMoves(Bitboard kingPosition, const Bitboard& sameColorPieces, std::vector<Move>& moves);
 	void getBishopMoves(Bitboard bishopPositions, const Bitboard& blockers, const Bitboard& sameColorPieces, std::vector<Move>& moves);
 	void getRookMoves(Bitboard rookPositions, const Bitboard& blockers, const Bitboard& sameColorPieces, std::vector<Move>& moves);
 	void getQueenMoves(Bitboard queenPosition, const Bitboard& blockers, const Bitboard& sameColorPieces, std::vector<Move>& moves);
+
+	// Generates the Bitboard of moves for a single piece (pseudo-legal)
+	Bitboard genPawnMoveMask(int originIdx, int color, Bitboard currPawn, const Bitboard& empty, const Bitboard& oppColorPieces);
+	Bitboard genKnightMoveMask(int originIdx, const Bitboard& sameColorPieces);
+	Bitboard genKingMoveMask(int originIdx, const Bitboard& sameColorPieces);
+	Bitboard genBishopMoveMask(int originIdx, const Bitboard& blockers, const Bitboard& sameColorPieces);
+	Bitboard genRookMoveMask(int originIdx, const Bitboard& blockers, const Bitboard& sameColorPieces);
+	Bitboard genQueenMoveMask(int originIdx, const Bitboard& blockers, const Bitboard& sameColorPieces);
+
 
 	// Utility
 	Bitboard getOccupancyByColor(int color);
