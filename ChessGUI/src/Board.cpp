@@ -63,8 +63,9 @@ void Board::movePieceManually(const Input& input, Engine& engine)
     else if (selectedIndex != -1 && input.isMbPressed(sf::Mouse::Button::Left))
     {
         int targetIndex = boardX + boardY * 8;
+        Move move(selectedIndex, targetIndex);
         
-        if (engine.makeMove(selectedIndex, targetIndex))
+        if (engine.makeMove(move))
         {
             // Every time a move is made, set the highlight squares appropriately
             mostRecentMove.clear();

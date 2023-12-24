@@ -22,7 +22,7 @@ public:
 
 	Engine();
 
-	bool makeMove(const int& origin, const int& target);
+	bool makeMove(Move move);
 
 	const std::vector<int>& getBoard() const;
 	bool isSquareEmpty(int index);
@@ -67,17 +67,17 @@ private:
 	static const int HORIZONTAL = 1;
 
 	// Precomputation
-	Bitboard genPawnAttackMask(int color, int index);
 	void precomputePawnAttacks();
-	Bitboard genKnightAttackMask(int index);
 	void precomputeKnightAttacks();
-	Bitboard genKingAttackMask(int index);
 	void precomputeKingAttacks();
 
 	Bitboard genRay(int index, int dir);
 	void fillRayTable();
 
-	// Move Generation
+	// Change board state
+	void undoMove(const Move& move);
+	void makePseudoLegalMove(Move move);
+
 	// Generates all Moves for a type of piece (pseudo-legal)
 	void getPawnMoves(Bitboard pawnPositions, int color, const Bitboard& empty, const Bitboard& oppColorPieces, std::vector<Move>& moves);
 	void getKnightMoves(Bitboard knightPositions, const Bitboard& sameColorPieces, std::vector<Move>& moves);
@@ -85,6 +85,9 @@ private:
 	void getBishopMoves(Bitboard bishopPositions, const Bitboard& blockers, const Bitboard& sameColorPieces, std::vector<Move>& moves);
 	void getRookMoves(Bitboard rookPositions, const Bitboard& blockers, const Bitboard& sameColorPieces, std::vector<Move>& moves);
 	void getQueenMoves(Bitboard queenPosition, const Bitboard& blockers, const Bitboard& sameColorPieces, std::vector<Move>& moves);
+
+	// Pseudo-legal to legal
+	void filterOutIllegalMoves(int color, std::vector<Move>& pseudoLegalMoves, std::vector<Move>& legalMoves);
 
 	// Generates the Bitboard of moves for all pieces of the same type (pseudo-legal)
 	Bitboard genPawnsMoveMask(int color, Bitboard pawnPositions, const Bitboard& empty, const Bitboard& oppColorPieces);
@@ -99,6 +102,8 @@ private:
 	Bitboard genBishopMoveMask(int originIdx, const Bitboard& blockers, const Bitboard& sameColorPieces);
 	Bitboard genRookMoveMask(int originIdx, const Bitboard& blockers, const Bitboard& sameColorPieces);
 	Bitboard genQueenMoveMask(Bitboard queenPosition, const Bitboard& blockers, const Bitboard& sameColorPieces);
+
+	Bitboard genAttackMask(int color);
 
 	bool isInCheck(int color);
 
